@@ -1,0 +1,15 @@
+import { useState } from "react";
+import reactLogo from "./assets/react.svg";
+import { Toaster } from "react-hot-toast";
+import Routes from "./routes";
+
+function App() {
+  return (
+    <>
+      <Routes />
+      <Toaster />
+    </>
+  );
+}
+
+export default App;
