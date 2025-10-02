@@ -24,7 +24,7 @@ export default function login() {
   const navigate = useNavigate();
 
   //define state
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   //define state errors
@@ -34,17 +34,17 @@ export default function login() {
   const login = async (e) => {
     e.preventDefault();
 
-    await Api.post("/api/login", {
+    await Api.post("/login", {
       //data
-      email: email,
+      username: username,
       password: password,
     })
       .then((response) => {
         //set token to cookies
-        Cookies.set("token", response.data.token);
+        Cookies.set("token", response.data.data.token);
 
         //set user to cookies
-        Cookies.set("user", JSON.stringify(response.data.user));
+        Cookies.set("user", JSON.stringify(response.data.data.user));
 
         //set permissions to cookies
         // Cookies.set("permissions", JSON.stringify(response.data.permissions));
@@ -93,22 +93,22 @@ export default function login() {
                 )}
                 <form onSubmit={login} className="row g-4">
                   <div className="col-12">
-                    <label>Email Address</label>
+                    <label>Username</label>
                     <div className="input-group">
                       <div className="input-group-text">
-                        <i className="fa fa-envelope"></i>
+                        <i className="fa fa-person"></i>
                       </div>
                       <input
                         type="text"
                         className="form-control"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
                         placeholder="Enter Email Address"
                       />
                     </div>
-                    {errors.email && (
+                    {errors.username && (
                       <div className="alert alert-danger mt-2">
-                        {errors.email[0]}
+                        {errors.username[0]}
                       </div>
                     )}
                   </div>
