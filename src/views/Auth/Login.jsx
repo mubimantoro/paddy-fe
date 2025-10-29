@@ -34,7 +34,7 @@ export default function login() {
   const login = async (e) => {
     e.preventDefault();
 
-    await Api.post("/login", {
+    await Api.post("/api/login", {
       //data
       username: username,
       password: password,

@@ -6,7 +6,7 @@ import Cookies from "js-cookie";
 
 const Api = axios.create({
   //set endpoint API
-  baseURL: "http://localhost:9000/api",
+  baseURL: "http://192.168.1.3:9000",
 
   //set header axios
   headers: {
