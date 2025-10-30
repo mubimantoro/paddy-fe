@@ -3,7 +3,6 @@ import LayoutAdmin from "../../../layouts/Admin";
 import Cookies from "js-cookie";
 import Api from "../../../services/Api";
 import { Link } from "react-router-dom";
-import hasAnyPermission from "../../../utils/Permissions";
 import Pagination from "../../../components/general/Pagination";
 import { confirmAlert } from "react-confirm-alert";
 import toast from "react-hot-toast";
@@ -18,8 +17,6 @@ export default function WilayahIndex() {
     perPage: 10,
     total: 0,
   });
-
-  const [keywords, setKeywords] = useState("");
 
   const token = Cookies.get("token");
 
@@ -42,11 +39,6 @@ export default function WilayahIndex() {
   useEffect(() => {
     fetchData();
   }, []);
-
-  const searchData = async (e) => {
-    setKeywords(e.target.value);
-    fetchData(1, e.target.value);
-  };
 
   const deleteWilayah = (id) => {
     confirmAlert({
@@ -112,7 +104,7 @@ export default function WilayahIndex() {
                             Kode Wilayah
                           </th>
                           <th className="border-0" style={{ width: "5%" }}>
-                            Nama
+                            Nama Wilayah
                           </th>
                           <th className="border-0" style={{ width: "15%" }}>
                             Aksi
@@ -129,7 +121,7 @@ export default function WilayahIndex() {
                                   (pagination.currentPage - 1) *
                                     pagination.perPage}
                               </td>
-                              <td>{item.kode}</td>
+                              <td>{item.kode || "-"}</td>
                               <td>{item.nama}</td>
                               <td className="text-center">
                                 <Link

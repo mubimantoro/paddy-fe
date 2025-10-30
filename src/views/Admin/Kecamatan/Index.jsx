@@ -3,36 +3,35 @@ import LayoutAdmin from "../../../layouts/Admin";
 import Cookies from "js-cookie";
 import Api from "../../../services/Api";
 import { Link } from "react-router-dom";
-import hasAnyPermission from "../../../utils/Permissions";
 import Pagination from "../../../components/general/Pagination";
 import { confirmAlert } from "react-confirm-alert";
 import toast from "react-hot-toast";
 
 export default function KecamatanIndex() {
+  document.title = "Kecamatan - SIBalintan";
+
   const [kecamatan, setKecamatan] = useState([]);
 
   const [pagination, setPagination] = useState({
-    currentPage: 0,
-    perPage: 0,
+    currentPage: 1,
+    perPage: 10,
     total: 0,
   });
 
-  const [keywords, setKeywords] = useState("");
-
   const token = Cookies.get("token");
 
-  const fetchData = async (pageNumber = 1, keywords = "") => {
+  const fetchData = async (pageNumber = 1) => {
     const page = pageNumber ? pageNumber : pagination.currentPage;
-    await Api.get(`/api/kecamatan`, {
+    await Api.get(`/api/kecamatan?page=${page}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
       setKecamatan(response.data.data.kecamatan);
       setPagination(() => ({
-        currentPage: response.data.data.current_page,
-        perPage: response.data.data.per_page,
-        total: response.data.data.total,
+        currentPage: response.data.pagination.page,
+        perPage: response.data.pagination.size,
+        total: response.data.pagination.totalItems,
       }));
     });
   };
@@ -41,12 +40,7 @@ export default function KecamatanIndex() {
     fetchData();
   }, []);
 
-  const searchData = async (e) => {
-    setKeywords(e.target.value);
-    fetchData(1, e.target.value);
-  };
-
-  const deleteKegiatan = (id) => {
+  const deleteKecamatan = (id) => {
     confirmAlert({
       title: "Hapus Data",
       message: "Apakah Anda yakin ingin menghapus data ini ?",
@@ -54,7 +48,7 @@ export default function KecamatanIndex() {
         {
           label: "Ya",
           onClick: async () => {
-            await Api.delete(`/api/admin/kegiatan/${id}`, {
+            await Api.delete(`/api/kecamatan/${id}`, {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
@@ -85,25 +79,12 @@ export default function KecamatanIndex() {
               <div className="row">
                 <div className="col-md-3 col-12 mb-2">
                   <Link
-                    to="/admin/kegiatan/create"
+                    to="/admin/kecamatan/create"
                     className="btn btn-md btn-primary border-0 shadow-sm w-100"
                     type="button"
                   >
-                    <i className="fa fa-plus-circle"></i> Tambah Kegiatan Baru
+                    <i className="fa fa-plus-circle"></i> Tambah Kecamatan Baru
                   </Link>
-                </div>
-                <div className="col-md-9 col-12 mb-2">
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      className="form-control border-0 shadow-sm"
-                      onChange={(e) => searchData(e)}
-                      placeholder="search here..."
-                    />
-                    <span className="input-group-text border-0 shadow-sm">
-                      <i className="fa fa-search"></i>
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>
@@ -122,8 +103,11 @@ export default function KecamatanIndex() {
                           <th className="border-0" style={{ width: "15%" }}>
                             Kode Wilayah
                           </th>
-                          <th className="border-0" style={{ width: "5%" }}>
-                            Nama
+                          <th className="border-0" style={{ width: "15%" }}>
+                            Nama Wilayah
+                          </th>
+                          <th className="border-0" style={{ width: "15%" }}>
+                            Nama Kecamatan
                           </th>
                           <th className="border-0" style={{ width: "15%" }}>
                             Aksi
@@ -135,22 +119,24 @@ export default function KecamatanIndex() {
                           kecamatan.map((item, index) => (
                             <tr key={index}>
                               <td className="fw-bold text-center">
-                                {++index +
+                                {index +
+                                  1 +
                                   (pagination.currentPage - 1) *
                                     pagination.perPage}
                               </td>
-                              <td>{item.kode}</td>
+                              <td>{item.kode || "-"}</td>
+                              <td>{item.wilayah?.nama || "-"}</td>
                               <td>{item.nama}</td>
                               <td className="text-center">
                                 <Link
-                                  to={`/admin/kegiatan/edit/${item.id}`}
+                                  to={`/admin/kecamatan/edit/${item.id}`}
                                   className="btn btn-primary btn-sm me-2"
                                 >
                                   <i className="fa fa-pencil-alt"></i>
                                 </Link>
 
                                 <button
-                                  onClick={() => deleteKegiatan(item.id)}
+                                  onClick={() => deleteKecamatan(item.id)}
                                   className="btn btn-danger btn-sm"
                                 >
                                   <i className="fa fa-trash"></i>
@@ -177,7 +163,7 @@ export default function KecamatanIndex() {
                     currentPage={pagination.currentPage}
                     perPage={pagination.perPage}
                     total={pagination.total}
-                    onChange={(pageNumber) => fetchData(pageNumber, keywords)}
+                    onChange={(pageNumber) => fetchData(pageNumber)}
                     position="end"
                   />
                 </div>

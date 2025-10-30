@@ -1,11 +1,6 @@
 //import react router dom
 import { Routes, Route } from "react-router-dom";
 
-//======================================================
-// view admin
-//======================================================
-
-//import view login
 import Login from "../views/Auth/Login";
 import Forbidden from "../views/Auth/Forbidden";
 import Dashboard from "../views/Admin/Index";
@@ -16,11 +11,12 @@ import RolesIndex from "../views/Admin/Roles/Index";
 import UsersIndex from "../views/Admin/Users/Index";
 import WilayahCreate from "../views/Admin/Wilayah/Create";
 import WilayahEdit from "../views/Admin/Wilayah/Edit";
+import KecamatanCreate from "../views/Admin/Kecamatan/Create";
+import KecamatanEdit from "../views/Admin/Kecamatan/Edit";
 
 export default function RoutesIndex() {
   return (
     <Routes>
-      {/* route "/login" */}
       <Route path="/" element={<Login />} />
       {/* route "/forbidden" */}
       <Route path="/forbidden" element={<Forbidden />} />
@@ -66,6 +62,24 @@ export default function RoutesIndex() {
           </PrivateRoutes>
         }
       />
+      <Route
+        path="/admin/kecamatan/create"
+        element={
+          <PrivateRoutes>
+            <KecamatanCreate />
+          </PrivateRoutes>
+        }
+      />
+
+      <Route
+        path="/admin/kecamatan/edit/:id"
+        element={
+          <PrivateRoutes>
+            <KecamatanEdit />
+          </PrivateRoutes>
+        }
+      />
+
       <Route
         path="/admin/pengaduan-tanaman"
         element={
