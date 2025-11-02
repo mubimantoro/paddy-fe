@@ -13,6 +13,8 @@ import WilayahCreate from "../views/Admin/Wilayah/Create";
 import WilayahEdit from "../views/Admin/Wilayah/Edit";
 import KecamatanCreate from "../views/Admin/Kecamatan/Create";
 import KecamatanEdit from "../views/Admin/Kecamatan/Edit";
+import PengaduanTanamanIndex from "../views/Admin/PengaduanTanaman/Index";
+import PengaduanTanamanDetail from "../views/Admin/PengaduanTanaman/Detail";
 
 export default function RoutesIndex() {
   return (
@@ -84,10 +86,20 @@ export default function RoutesIndex() {
         path="/admin/pengaduan-tanaman"
         element={
           <PrivateRoutes>
-            <KecamatanIndex />
+            <PengaduanTanamanIndex />
           </PrivateRoutes>
         }
       />
+
+      <Route
+        path="/admin/pengaduan-tanaman/detail/:id"
+        element={
+          <PrivateRoutes>
+            <PengaduanTanamanDetail />
+          </PrivateRoutes>
+        }
+      />
+
       <Route
         path="/admin/roles"
         element={

@@ -27,7 +27,7 @@ export default function KecamatanIndex() {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      setKecamatan(response.data.data.kecamatan);
+      setKecamatan(response.data.data);
       setPagination(() => ({
         currentPage: response.data.pagination.page,
         perPage: response.data.pagination.size,

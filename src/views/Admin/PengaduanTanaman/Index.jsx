@@ -7,9 +7,11 @@ import hasAnyPermission from "../../../utils/Permissions";
 import Pagination from "../../../components/general/Pagination";
 import { confirmAlert } from "react-confirm-alert";
 import toast from "react-hot-toast";
+import DateID from "../../../utils/DateID";
 
 export default function PengaduanTanamanIndex() {
-  const [kecamatan, setKecamatan] = useState([]);
+  document.title = "Pengaduan Tanaman - SIBalintan";
+  const [pengaduanTanaman, setPengaduanTanaman] = useState([]);
 
   const [pagination, setPagination] = useState({
     currentPage: 0,
@@ -21,14 +23,14 @@ export default function PengaduanTanamanIndex() {
 
   const token = Cookies.get("token");
 
-  const fetchData = async (pageNumber = 1, keywords = "") => {
+  const fetchData = async (pageNumber = 1) => {
     const page = pageNumber ? pageNumber : pagination.currentPage;
-    await Api.get(`/api/kecamatan`, {
+    await Api.get(`/api/admin/pengaduan-tanaman`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      setKecamatan(response.data.data.kecamatan);
+      setPengaduanTanaman(response.data.data);
       setPagination(() => ({
         currentPage: response.data.data.current_page,
         perPage: response.data.data.per_page,
@@ -76,6 +78,23 @@ export default function PengaduanTanamanIndex() {
     });
   };
 
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "Pending":
+        return <span className="badge bg-warning">Pending</span>;
+      case "assigned":
+        return <span className="badge bg-info">Ditugaskan</span>;
+      case "in_progress":
+        return <span className="badge bg-primary">Diproses</span>;
+      case "completed":
+        return <span className="badge bg-success">Selesai</span>;
+      case "rejected":
+        return <span className="badge bg-danger">Ditolak</span>;
+      default:
+        return <span className="badge bg-secondary">{status}</span>;
+    }
+  };
+
   return (
     <LayoutAdmin>
       <main>
@@ -119,31 +138,73 @@ export default function PengaduanTanamanIndex() {
                           <th className="border-0" style={{ width: "5%" }}>
                             No.
                           </th>
-                          <th className="border-0" style={{ width: "15%" }}>
-                            Kode Wilayah
-                          </th>
-                          <th className="border-0" style={{ width: "5%" }}>
-                            Nama
+                          <th className="border-0" style={{ width: "10%" }}>
+                            Tanggal Pengaduan
                           </th>
                           <th className="border-0" style={{ width: "15%" }}>
+                            Kelompok Tani
+                          </th>
+                          <th className="border-0" style={{ width: "20%" }}>
+                            Alamat
+                          </th>
+                          <th className="border-0" style={{ width: "12%" }}>
+                            Kecamatan
+                          </th>
+                          <th className="border-0" style={{ width: "20%" }}>
+                            Deskripsi Pengaduan
+                          </th>
+                          <th className="border-0" style={{ width: "8%" }}>
+                            Status
+                          </th>
+                          <th className="border-0" style={{ width: "10%" }}>
                             Aksi
                           </th>
                         </tr>
                       </thead>
                       <tbody>
-                        {kecamatan.length > 0 ? (
-                          kecamatan.map((item, index) => (
+                        {pengaduanTanaman.length > 0 ? (
+                          pengaduanTanaman.map((item, index) => (
                             <tr key={index}>
                               <td className="fw-bold text-center">
                                 {++index +
                                   (pagination.currentPage - 1) *
                                     pagination.perPage}
                               </td>
-                              <td>{item.kode}</td>
-                              <td>{item.nama}</td>
+                              <td className="text-muted small">
+                                {DateID(new Date(item.created_at))}
+                              </td>
+                              <td>{item.kelompok_tani}</td>
+                              <td>
+                                {item.alamat}
+                                <br />
+                                <small className="text-muted">
+                                  {item.kabupaten}
+                                </small>
+                              </td>
+                              <td>{item.kecamatan}</td>
+                              <td>
+                                <div
+                                  style={{
+                                    maxHeight: "60px",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                  }}
+                                >
+                                  {item.deskripsi}
+                                </div>
+                              </td>
+                              <td>{getStatusBadge(item.status)}</td>
                               <td className="text-center">
                                 <Link
-                                  to={`/admin/kegiatan/edit/${item.id}`}
+                                  to={`/admin/pengaduan-tanaman/detail/${item.id}`}
+                                  className="btn btn-info btn-sm me-2"
+                                  title="Lihat Detail"
+                                >
+                                  <i className="fa fa-eye"></i>
+                                </Link>
+
+                                <Link
+                                  to={`/admin/pengaduan-tanaman/edit/${item.id}`}
                                   className="btn btn-primary btn-sm me-2"
                                 >
                                   <i className="fa fa-pencil-alt"></i>

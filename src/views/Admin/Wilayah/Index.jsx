@@ -27,7 +27,7 @@ export default function WilayahIndex() {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      setWilayah(response.data.data.wilayah);
+      setWilayah(response.data.data);
       setPagination(() => ({
         currentPage: response.data.pagination.page,
         perPage: response.data.pagination.size,
