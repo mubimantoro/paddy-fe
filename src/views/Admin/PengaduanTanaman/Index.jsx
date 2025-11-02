@@ -3,7 +3,6 @@ import LayoutAdmin from "../../../layouts/Admin";
 import Cookies from "js-cookie";
 import Api from "../../../services/Api";
 import { Link } from "react-router-dom";
-import hasAnyPermission from "../../../utils/Permissions";
 import Pagination from "../../../components/general/Pagination";
 import { confirmAlert } from "react-confirm-alert";
 import toast from "react-hot-toast";
@@ -14,8 +13,8 @@ export default function PengaduanTanamanIndex() {
   const [pengaduanTanaman, setPengaduanTanaman] = useState([]);
 
   const [pagination, setPagination] = useState({
-    currentPage: 0,
-    perPage: 0,
+    currentPage: 1,
+    perPage: 10,
     total: 0,
   });
 
@@ -25,16 +24,16 @@ export default function PengaduanTanamanIndex() {
 
   const fetchData = async (pageNumber = 1) => {
     const page = pageNumber ? pageNumber : pagination.currentPage;
-    await Api.get(`/api/admin/pengaduan-tanaman`, {
+    await Api.get(`/api/admin/pengaduan-tanaman?page=${page}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
       setPengaduanTanaman(response.data.data);
       setPagination(() => ({
-        currentPage: response.data.data.current_page,
-        perPage: response.data.data.per_page,
-        total: response.data.data.total,
+        currentPage: response.data.pagination.page,
+        perPage: response.data.pagination.size,
+        total: response.data.pagination.totalItems,
       }));
     });
   };
@@ -99,34 +98,6 @@ export default function PengaduanTanamanIndex() {
     <LayoutAdmin>
       <main>
         <div className="container-fluid mb-5 mt-5">
-          <div className="row">
-            <div className="col-md-8">
-              <div className="row">
-                <div className="col-md-3 col-12 mb-2">
-                  <Link
-                    to="/admin/kegiatan/create"
-                    className="btn btn-md btn-primary border-0 shadow-sm w-100"
-                    type="button"
-                  >
-                    <i className="fa fa-plus-circle"></i> Tambah Kegiatan Baru
-                  </Link>
-                </div>
-                <div className="col-md-9 col-12 mb-2">
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      className="form-control border-0 shadow-sm"
-                      onChange={(e) => searchData(e)}
-                      placeholder="search here..."
-                    />
-                    <span className="input-group-text border-0 shadow-sm">
-                      <i className="fa fa-search"></i>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
           <div className="row mt-1">
             <div className="col-md-12">
               <div className="card border-0 rounded shadow-sm border-top-success">
@@ -238,7 +209,7 @@ export default function PengaduanTanamanIndex() {
                     currentPage={pagination.currentPage}
                     perPage={pagination.perPage}
                     total={pagination.total}
-                    onChange={(pageNumber) => fetchData(pageNumber, keywords)}
+                    onChange={(pageNumber) => fetchData(pageNumber)}
                     position="end"
                   />
                 </div>
