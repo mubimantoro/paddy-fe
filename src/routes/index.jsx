@@ -15,6 +15,9 @@ import KecamatanCreate from "../views/Admin/Kecamatan/Create";
 import KecamatanEdit from "../views/Admin/Kecamatan/Edit";
 import PengaduanTanamanIndex from "../views/Admin/PengaduanTanaman/Index";
 import PengaduanTanamanDetail from "../views/Admin/PengaduanTanaman/Detail";
+import PoptIndex from "../views/Admin/Popt/Index";
+import PoptDetail from "../views/Admin/Popt/Detail";
+import PoptCreate from "../views/Admin/Popt/Create";
 
 export default function RoutesIndex() {
   return (
@@ -78,6 +81,33 @@ export default function RoutesIndex() {
         element={
           <PrivateRoutes>
             <KecamatanEdit />
+          </PrivateRoutes>
+        }
+      />
+
+      <Route
+        path="/admin/popt"
+        element={
+          <PrivateRoutes>
+            <PoptIndex />
+          </PrivateRoutes>
+        }
+      />
+
+      <Route
+        path="/admin/popt/create"
+        element={
+          <PrivateRoutes>
+            <PoptCreate />
+          </PrivateRoutes>
+        }
+      />
+
+      <Route
+        path="/admin/popt/detail/:id"
+        element={
+          <PrivateRoutes>
+            <PoptDetail />
           </PrivateRoutes>
         }
       />

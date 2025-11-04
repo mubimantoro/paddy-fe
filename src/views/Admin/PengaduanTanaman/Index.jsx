@@ -168,25 +168,11 @@ export default function PengaduanTanamanIndex() {
                               <td className="text-center">
                                 <Link
                                   to={`/admin/pengaduan-tanaman/detail/${item.id}`}
-                                  className="btn btn-info btn-sm me-2"
+                                  className="btn btn-primary btn-sm me-2"
                                   title="Lihat Detail"
                                 >
                                   <i className="fa fa-eye"></i>
                                 </Link>
-
-                                <Link
-                                  to={`/admin/pengaduan-tanaman/edit/${item.id}`}
-                                  className="btn btn-primary btn-sm me-2"
-                                >
-                                  <i className="fa fa-pencil-alt"></i>
-                                </Link>
-
-                                <button
-                                  onClick={() => deleteKegiatan(item.id)}
-                                  className="btn btn-danger btn-sm"
-                                >
-                                  <i className="fa fa-trash"></i>
-                                </button>
                               </td>
                             </tr>
                           ))

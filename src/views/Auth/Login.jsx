@@ -80,7 +80,9 @@ export default function login() {
       >
         <div className="col-md-7">
           <div className="text-center mb-5">
-            {/* <img src={"/images/logo-jbg.png"} width={"100"} /> */}
+            <h4>
+              <strong className="text-success mt-3">Login - SIBalintan</strong>
+            </h4>
             <h4>
               <strong className="text-white mt-3"></strong>
             </h4>

@@ -16,6 +16,7 @@ import Cookies from "js-cookie";
 //import toast
 import toast from "react-hot-toast";
 import DateID from "../../../utils/DateID";
+import Loading from "../../../components/general/Loading";
 
 export default function PengaduanTanamanDetail() {
   document.title = `Detail Pengaduan Tanaman - SIBalintan`;
@@ -23,6 +24,8 @@ export default function PengaduanTanamanDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [pengaduanTanaman, setPengaduanTanaman] = useState({});
+  const [loadingPengaduanTanaman, setLoadingPengaduanTanaman] = useState(true);
+
   const [poptList, setPoptList] = useState([]);
   const [selectedPopt, setSelectedPopt] = useState("");
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -69,8 +72,7 @@ export default function PengaduanTanamanDetail() {
 
     try {
       const formData = new FormData();
-      formData.append("laporan_file", laporanFile);
-      formData.append("laporan_keterangan", laporanKeterangan);
+      formData.append("file", laporanFile);
 
       await Api.post(
         `/api/admin/pengaduan-tanaman/${id}/upload-laporan`,
@@ -101,13 +103,24 @@ export default function PengaduanTanamanDetail() {
   };
 
   const fetchDetail = async () => {
-    await Api.get(`/api/pengaduan-tanaman/${id}`, {
+    setLoadingPengaduanTanaman(true);
+    await Api.get(`/api/admin/pengaduan-tanaman/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
       setPengaduanTanaman(response.data.data.pengaduan);
-      // setLoadingPost(false);
+      setLoadingPengaduanTanaman(false);
+    });
+  };
+
+  const fetchPoptList = async () => {
+    await Api.get("/api/admin/users/role/popt", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }).then((response) => {
+      setPoptList(response.data.data.users || []);
     });
   };
 
@@ -116,57 +129,26 @@ export default function PengaduanTanamanDetail() {
     fetchPoptList();
   }, [id]);
 
-  const fetchPoptList = async () => {
-    try {
-      // Sesuaikan endpoint untuk mendapatkan list user dengan role POPT
-      const response = await Api.get(`/api/admin/users/role/popt`, {
+  const handleAssignPopt = async () => {
+    await Api.post(
+      "/api/admin/pengaduan-tanaman/assign",
+      {
+        pengaduanTanamanId: id,
+        poptId: selectedPopt,
+      },
+      {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      });
-
-      setPoptList(response.data.data.users || []);
-    } catch (error) {
-      console.error("Error fetching POPT list:", error);
-    }
-  };
-
-  const handleAssignPopt = async () => {
-    if (!selectedPopt) {
-      toast.error("Pilih petugas POPT terlebih dahulu", {
+      }
+    ).then((response) => {
+      toast.success(response.data.message, {
         position: "top-right",
         duration: 4000,
       });
-      return;
-    }
-
-    try {
-      await Api.post(
-        `/api/admin/pengaduan-tanaman/assign`,
-        {
-          pengaduanId: id,
-          poptId: selectedPopt,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      toast.success("POPT berhasil ditugaskan", {
-        position: "top-right",
-        duration: 4000,
-      });
-
       setShowAssignModal(false);
-      fetchDetail(); // Reload data
-    } catch (error) {
-      toast.error("Gagal menugaskan POPT", {
-        position: "top-right",
-        duration: 4000,
-      });
-    }
+      fetchDetail();
+    });
   };
 
   const handleUpdateStatus = async (newStatus) => {
@@ -253,9 +235,9 @@ export default function PengaduanTanamanDetail() {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: { class: "bg-warning", text: "Menunggu" },
+      pending: { class: "bg-warning", text: "Pending" },
       assigned: { class: "bg-info", text: "Ditugaskan" },
-      in_progress: { class: "bg-primary", text: "Diproses" },
+      in_progress: { class: "bg-primary", text: "Diverifikasi" },
       completed: { class: "bg-success", text: "Selesai" },
       rejected: { class: "bg-danger", text: "Ditolak" },
     };
@@ -293,118 +275,145 @@ export default function PengaduanTanamanDetail() {
               </Link>
 
               <div className="card border-0 rounded shadow-sm border-top-success">
-                <div className="card-body">
-                  <h6>Detail Pengaduan Tanaman</h6>
-                  <hr />
-                  <div className="row">
-                    <div className="col-md-6">
-                      <table className="table">
-                        <tbody>
-                          <tr>
-                            <td>Kelompok Tani</td>
-                            <td>: {pengaduanTanaman.kelompok_tani || "-"}</td>
-                          </tr>
-                          <tr>
-                            <td>Nama pelapor</td>
-                            <td>: {pengaduanTanaman.user_nama || "-"}</td>
-                          </tr>
-                          <tr>
-                            <td>Lokasi</td>
-                            <td>
-                              :{" "}
-                              {pengaduanTanaman.alamat &&
-                              pengaduanTanaman.kecamatan &&
-                              pengaduanTanaman.kabupaten
-                                ? `${pengaduanTanaman.alamat}, ${pengaduanTanaman.kecamatan}, ${pengaduanTanaman.kabupaten}`
-                                : "-"}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>Koordinat</td>
-                            <td>
-                              :{" "}
-                              {pengaduanTanaman.latitude &&
-                              pengaduanTanaman.longitude ? (
-                                <>
-                                  {pengaduanTanaman.latitude},{" "}
-                                  {pengaduanTanaman.longitude}
-                                  <br />
-                                  <a
-                                    href={`https://www.google.com/maps?q=${pengaduanTanaman.latitude},${pengaduanTanaman.longitude}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="btn btn-sm btn-outline-success mt-2"
-                                  >
-                                    <i className="fa fa-map-pin me-1"></i>
-                                    Lihat di Google Maps
-                                  </a>
-                                </>
-                              ) : (
-                                "-"
-                              )}
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                    <div className="col-md-6">
-                      <table className="table">
-                        <tbody>
-                          <tr>
-                            <td>Status saat ini</td>
-                            <td>: {getStatusBadge(pengaduanTanaman.status)}</td>
-                          </tr>
-                          <tr>
-                            <td>Tanggal dibuat</td>
-                            <td>
-                              :{" "}
-                              {pengaduanTanaman.created_at
-                                ? DateID(new Date(pengaduanTanaman.created_at))
-                                : "-"}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td> Terakhir Diperbarui</td>
-                            <td>
-                              :{" "}
-                              {pengaduanTanaman.updated_at
-                                ? DateID(new Date(pengaduanTanaman.updated_at))
-                                : "-"}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>Deskripsi Masalah Tanaman</td>
-                            <td style={{ whiteSpace: "pre-wrap" }}>
-                              : {pengaduanTanaman.deskripsi || "-"}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>Foto Tanaman</td>
-                            <td>
-                              :{" "}
-                              {pengaduanTanaman.image ? (
-                                <>
-                                  <br />
-                                  <img
-                                    src={pengaduanTanaman.image}
-                                    alt="Foto Tanaman"
-                                    className="img-fluid rounded mt-2"
-                                    style={{
-                                      maxHeight: "300px",
-                                      objectFit: "contain",
-                                    }}
-                                  />
-                                </>
-                              ) : (
-                                "-"
-                              )}
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
+                {loadingPengaduanTanaman ? (
+                  <Loading />
+                ) : (
+                  <div className="card-body">
+                    <h6>Detail Pengaduan Tanaman</h6>
+                    <hr />
+                    <div className="row">
+                      <div className="col-md-6">
+                        <table className="table">
+                          <tbody>
+                            <tr>
+                              <td>Kelompok Tani</td>
+                              <td>: {pengaduanTanaman.kelompokTani || "-"}</td>
+                            </tr>
+                            <tr>
+                              <td>Nama pelapor</td>
+                              <td>
+                                : {pengaduanTanaman?.user?.namaLengkap || "-"}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Lokasi</td>
+                              <td>
+                                :{" "}
+                                {pengaduanTanaman.alamat &&
+                                pengaduanTanaman.kecamatan &&
+                                pengaduanTanaman.kabupaten
+                                  ? `${pengaduanTanaman.alamat}, ${pengaduanTanaman.kecamatan}, ${pengaduanTanaman.kabupaten}`
+                                  : "-"}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Koordinat</td>
+                              <td>
+                                :{" "}
+                                {pengaduanTanaman.latitude &&
+                                pengaduanTanaman.longitude ? (
+                                  <>
+                                    {pengaduanTanaman.latitude},{" "}
+                                    {pengaduanTanaman.longitude}
+                                    <br />
+                                    <a
+                                      href={`https://www.google.com/maps?q=${pengaduanTanaman.latitude},${pengaduanTanaman.longitude}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="btn btn-sm btn-outline-success mt-2"
+                                    >
+                                      <i className="fa fa-map-pin me-1"></i>
+                                      Lihat di Google Maps
+                                    </a>
+                                  </>
+                                ) : (
+                                  "-"
+                                )}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="col-md-6">
+                        <table className="table">
+                          <tbody>
+                            <tr>
+                              <td>Status saat ini</td>
+                              <td>
+                                : {getStatusBadge(pengaduanTanaman.status)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Tanggal dibuat</td>
+                              <td>
+                                :{" "}
+                                {pengaduanTanaman.createdAt
+                                  ? DateID(new Date(pengaduanTanaman.createdAt))
+                                  : "-"}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td> Terakhir Diperbarui</td>
+                              <td>
+                                :{" "}
+                                {pengaduanTanaman.updatedAt
+                                  ? DateID(new Date(pengaduanTanaman.updatedAt))
+                                  : "-"}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Deskripsi Masalah Tanaman</td>
+                              <td style={{ whiteSpace: "pre-wrap" }}>
+                                : {pengaduanTanaman.deskripsi || "-"}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Foto Tanaman</td>
+                              <td>
+                                :{" "}
+                                {pengaduanTanaman.image ? (
+                                  <>
+                                    <br />
+                                    <img
+                                      src={pengaduanTanaman.image}
+                                      alt="Foto Tanaman"
+                                      className="img-fluid rounded mt-2"
+                                      style={{
+                                        maxHeight: "300px",
+                                        objectFit: "contain",
+                                      }}
+                                    />
+                                  </>
+                                ) : (
+                                  "-"
+                                )}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Nama Petugas POPT</td>
+                              <td>
+                                : {pengaduanTanaman.popt.namaLengkap || "-"}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Tanggal Diverifikasi Petugas POPT</td>
+                              <td>
+                                :{" "}
+                                {pengaduanTanaman.tanggalVerifikasi
+                                  ? DateID(
+                                      new Date(
+                                        pengaduanTanaman.tanggalVerifikasi
+                                      )
+                                    )
+                                  : "-"}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -477,7 +486,7 @@ export default function PengaduanTanamanDetail() {
           </div>
 
           {/* Card Upload Hasil Laporan - Tampil jika status completed */}
-          {pengaduanTanaman.status === "completed" && (
+          {pengaduanTanaman.status === "Diverifikasi" && (
             <div className="row">
               <div className="col-md-12">
                 <div className="card border-0 rounded shadow-sm">
@@ -488,7 +497,7 @@ export default function PengaduanTanamanDetail() {
                     </h6>
                   </div>
                   <div className="card-body">
-                    {pengaduanTanaman.laporan_file ? (
+                    {pengaduanTanaman.file ? (
                       <div>
                         <div className="alert alert-success">
                           <i className="fa fa-check-circle me-2"></i>
@@ -506,7 +515,7 @@ export default function PengaduanTanamanDetail() {
                             <div>
                               <p className="mb-0 fw-bold">Laporan Pengaduan</p>
                               <a
-                                href={pengaduanTanaman.laporan_file}
+                                href={pengaduanTanaman.file}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="btn btn-sm btn-outline-primary mt-1"
@@ -517,19 +526,6 @@ export default function PengaduanTanamanDetail() {
                             </div>
                           </div>
                         </div>
-                        {pengaduanTanaman.laporan_keterangan && (
-                          <div className="mb-3">
-                            <label className="text-muted small">
-                              Keterangan
-                            </label>
-                            <p
-                              className="mb-0"
-                              style={{ whiteSpace: "pre-wrap" }}
-                            >
-                              {pengaduanTanaman.laporan_keterangan}
-                            </p>
-                          </div>
-                        )}
                       </div>
                     ) : (
                       <div>
@@ -646,17 +642,6 @@ export default function PengaduanTanamanDetail() {
                         {laporanFile.name}
                       </div>
                     )}
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Keterangan</label>
-                    <textarea
-                      className="form-control"
-                      rows="4"
-                      placeholder="Masukkan keterangan laporan..."
-                      value={laporanKeterangan}
-                      onChange={(e) => setLaporanKeterangan(e.target.value)}
-                    ></textarea>
                   </div>
                 </div>
                 <div className="modal-footer">

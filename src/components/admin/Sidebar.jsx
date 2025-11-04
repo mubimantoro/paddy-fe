@@ -60,6 +60,14 @@ export default function sidebar() {
           </Link>
           <Link
             className={
+              activeRoute[2] === "popt" ? "nav-link active-sidebar" : "nav-link"
+            }
+            to="/admin/popt"
+          >
+            Petugas POPT
+          </Link>
+          <Link
+            className={
               activeRoute[2] === "pengaduan-tanaman"
                 ? "nav-link active-sidebar"
                 : "nav-link"
@@ -137,7 +145,7 @@ export default function sidebar() {
           </div>
         </div>
       </div>
-      <div className="sb-sidenav-footer">
+      <div className="sb-sidenav-footer text-muted">
         <div className="small">Logged in as:</div>
         {user.username}
       </div>
