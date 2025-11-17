@@ -178,7 +178,7 @@ export default function PengaduanTanamanIndex() {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={6}>
+                            <td colSpan={8}>
                               <div
                                 className="alert alert-danger border-0 rounded shadow-sm w-100 text-center"
                                 role="alert"

@@ -392,7 +392,7 @@ export default function PengaduanTanamanDetail() {
                             <tr>
                               <td>Nama Petugas POPT</td>
                               <td>
-                                : {pengaduanTanaman.popt.namaLengkap || "-"}
+                                : {pengaduanTanaman?.popt?.namaLengkap || "-"}
                               </td>
                             </tr>
                             <tr>
@@ -408,6 +408,14 @@ export default function PengaduanTanamanDetail() {
                                   : "-"}
                               </td>
                             </tr>
+                            {pengaduanTanaman.catatanPopt && (
+                              <tr>
+                                <td>Catatan Petugas POPT</td>
+                                <td style={{ whiteSpace: "pre-wrap" }}>
+                                  : {pengaduanTanaman.catatanPopt}
+                                </td>
+                              </tr>
+                            )}
                           </tbody>
                         </table>
                       </div>
