@@ -18,6 +18,8 @@ import PengaduanTanamanDetail from "../views/Admin/PengaduanTanaman/Detail";
 import PoptIndex from "../views/Admin/Popt/Index";
 import PoptDetail from "../views/Admin/Popt/Detail";
 import PoptCreate from "../views/Admin/Popt/Create";
+import UsersCreate from "../views/Admin/Users/Create";
+import UsersEdit from "../views/Admin/Users/Edit";
 
 export default function RoutesIndex() {
   return (
@@ -143,6 +145,24 @@ export default function RoutesIndex() {
         element={
           <PrivateRoutes>
             <UsersIndex />
+          </PrivateRoutes>
+        }
+      />
+
+      <Route
+        path="/admin/users/create"
+        element={
+          <PrivateRoutes>
+            <UsersCreate />
+          </PrivateRoutes>
+        }
+      />
+
+      <Route
+        path="/admin/users/edit/:id"
+        element={
+          <PrivateRoutes>
+            <UsersEdit />
           </PrivateRoutes>
         }
       />

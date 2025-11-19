@@ -15,29 +15,27 @@ export default function UsersIndex() {
   const [users, setUsers] = useState([]);
 
   const [pagination, setPagination] = useState({
-    currentPage: 0,
-    perPage: 0,
+    currentPage: 1,
+    perPage: 10,
     total: 0,
   });
 
-  const [keywords, setKeywords] = useState("");
-
   const token = Cookies.get("token");
 
-  const fetchData = async (pageNumber = 1, keywords = "") => {
+  const fetchData = async (pageNumber = 1) => {
     const page = pageNumber ? pageNumber : pagination.currentPage;
 
-    await Api.get(`/api/admin/users?search=${keywords}&page=${page}`, {
+    await Api.get(`/api/admin/users?page=${page}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      setUsers(response.data.data.data);
+      setUsers(response.data.data);
 
       setPagination(() => ({
-        currentPage: response.data.data.current_page,
-        perPage: response.data.data.per_page,
-        total: response.data.data.total,
+        currentPage: response.data.pagination.page,
+        perPage: response.data.pagination.size,
+        total: response.data.pagination.totalItems,
       }));
     });
   };
@@ -88,17 +86,15 @@ export default function UsersIndex() {
           <div className="row">
             <div className="col-md-8">
               <div className="row">
-                {hasAnyPermission(["users.create"]) && (
-                  <div className="col-md-3 col-12 mb-2">
-                    <Link
-                      to="/admin/users/create"
-                      className="btn btn-md btn-primary border-0 shadow-sm w-100"
-                      type="button"
-                    >
-                      <i className="fa fa-plus-circle"></i> Tambah Baru
-                    </Link>
-                  </div>
-                )}
+                <div className="col-md-3 col-12 mb-2">
+                  <Link
+                    to="/admin/users/create"
+                    className="btn btn-md btn-primary border-0 shadow-sm w-100"
+                    type="button"
+                  >
+                    <i className="fa fa-plus-circle"></i> Tambah Baru
+                  </Link>
+                </div>
                 <div className="col-md-9 col-12 mb-2">
                   <div className="input-group">
                     <input
@@ -127,7 +123,7 @@ export default function UsersIndex() {
                             No.
                           </th>
                           <th className="border-0">Nama Lengkap</th>
-                          <th className="border-0">Email</th>
+                          <th className="border-0">Username</th>
                           <th className="border-0">Roles</th>
                           <th className="border-0" style={{ width: "15%" }}>
                             Aksi
@@ -136,17 +132,17 @@ export default function UsersIndex() {
                       </thead>
                       <tbody>
                         {users.length > 0 ? (
-                          users.map((user, index) => (
+                          users.map((item, index) => (
                             <tr key={index}>
                               <td className="fw-bold text-center">
                                 {++index +
                                   (pagination.currentPage - 1) *
                                     pagination.perPage}
                               </td>
-                              <td>{user.nama_lengkap}</td>
-                              <td>{user.email}</td>
+                              <td>{item.nama_lengkap}</td>
+                              <td>{item.username}</td>
                               <td>
-                                {user.roles.map((role, index) => (
+                                {item.roles.map((role, index) => (
                                   <span
                                     className="btn btn-warning btn-sm shadow-sm border-0 ms-2 mb-2 fw-normal"
                                     key={index}
@@ -156,23 +152,18 @@ export default function UsersIndex() {
                                 ))}
                               </td>
                               <td className="text-center">
-                                {hasAnyPermission(["users.edit"]) && (
-                                  <Link
-                                    to={`/admin/users/edit/${user.id}`}
-                                    className="btn btn-primary btn-sm me-2"
-                                  >
-                                    <i className="fa fa-pencil-alt"></i>
-                                  </Link>
-                                )}
-                                {/* destroy */}
-                                {hasAnyPermission(["users.delete"]) && (
-                                  <button
-                                    onClick={() => deleteUser(user.id)}
-                                    className="btn btn-danger btn-sm"
-                                  >
-                                    <i className="fa fa-trash"></i>
-                                  </button>
-                                )}
+                                <Link
+                                  to={`/admin/users/edit/${item.id}`}
+                                  className="btn btn-primary btn-sm me-2"
+                                >
+                                  <i className="fa fa-pencil-alt"></i>
+                                </Link>
+                                <button
+                                  onClick={() => deleteUser(item.id)}
+                                  className="btn btn-danger btn-sm"
+                                >
+                                  <i className="fa fa-trash"></i>
+                                </button>
                               </td>
                             </tr>
                           ))
@@ -195,7 +186,7 @@ export default function UsersIndex() {
                     currentPage={pagination.currentPage}
                     perPage={pagination.perPage}
                     total={pagination.total}
-                    onChange={(pageNumber) => fetchData(pageNumber, keywords)}
+                    onChange={(pageNumber) => fetchData(pageNumber)}
                     position="end"
                   />
                 </div>
