@@ -95,19 +95,6 @@ export default function UsersIndex() {
                     <i className="fa fa-plus-circle"></i> Tambah Baru
                   </Link>
                 </div>
-                <div className="col-md-9 col-12 mb-2">
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      className="form-control border-0 shadow-sm"
-                      onChange={(e) => searchData(e)}
-                      placeholder="search here..."
-                    />
-                    <span className="input-group-text border-0 shadow-sm">
-                      <i className="fa fa-search"></i>
-                    </span>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

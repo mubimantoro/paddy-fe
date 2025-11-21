@@ -1,19 +1,9 @@
-//import react
 import { useState, useEffect } from "react";
-
-//import react router dom
 import { Link, useNavigate, useParams } from "react-router-dom";
-
-//import layout
 import LayoutAdmin from "../../../layouts/Admin";
-
-//import api
 import Api from "../../../services/Api";
-
-//import js cookie
 import Cookies from "js-cookie";
-
-//import toast
+import { confirmAlert } from "react-confirm-alert";
 import toast from "react-hot-toast";
 import DateID from "../../../utils/DateID";
 import Loading from "../../../components/general/Loading";
@@ -31,15 +21,12 @@ export default function PengaduanTanamanDetail() {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [laporanFile, setLaporanFile] = useState(null);
-  const [laporanKeterangan, setLaporanKeterangan] = useState("");
 
-  //token from cookies
   const token = Cookies.get("token");
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validasi tipe file (PDF)
       if (file.type !== "application/pdf") {
         toast.error("File harus berformat PDF", {
           position: "top-right",
@@ -48,7 +35,6 @@ export default function PengaduanTanamanDetail() {
         return;
       }
 
-      // Validasi ukuran file (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast.error("Ukuran file maksimal 5MB", {
           position: "top-right",
@@ -93,7 +79,7 @@ export default function PengaduanTanamanDetail() {
       setShowUploadModal(false);
       setLaporanFile(null);
       setLaporanKeterangan("");
-      fetchDetail(); // Reload data
+      fetchDetail();
     } catch (error) {
       toast.error("Gagal mengupload laporan", {
         position: "top-right",
@@ -111,6 +97,51 @@ export default function PengaduanTanamanDetail() {
     }).then((response) => {
       setPengaduanTanaman(response.data.data.pengaduan);
       setLoadingPengaduanTanaman(false);
+    });
+  };
+
+  const handleMarkAsHandled = () => {
+    confirmAlert({
+      title: "Tandai Sebagai Ditangani",
+      message:
+        "Apakah Anda yakin ingin menandai pengaduan ini sebagai ditangani? Status akan berubah menjadi 'Ditangani' tanpa perlu upload file laporan.",
+      buttons: [
+        {
+          label: "Ya, Tandai",
+          onClick: async () => {
+            try {
+              await Api.put(
+                `/api/admin/pengaduan-tanaman/${id}/mark-handled`,
+                {},
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                }
+              );
+
+              toast.success("Pengaduan berhasil ditandai sebagai ditangani", {
+                position: "top-right",
+                duration: 4000,
+              });
+
+              fetchDetail();
+            } catch (error) {
+              toast.error(
+                error.response?.data?.message || "Gagal menandai pengaduan",
+                {
+                  position: "top-right",
+                  duration: 4000,
+                }
+              );
+            }
+          },
+        },
+        {
+          label: "Batal",
+          onClick: () => {},
+        },
+      ],
     });
   };
 
@@ -235,11 +266,11 @@ export default function PengaduanTanamanDetail() {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: { class: "bg-warning", text: "Pending" },
-      assigned: { class: "bg-info", text: "Ditugaskan" },
-      in_progress: { class: "bg-primary", text: "Diverifikasi" },
-      completed: { class: "bg-success", text: "Selesai" },
-      rejected: { class: "bg-danger", text: "Ditolak" },
+      Pending: { class: "bg-warning", text: "Menunggu" },
+      Ditugaskan: { class: "bg-info", text: "Ditugaskan" },
+      Diverifikasi: { class: "bg-primary", text: "Diverifikasi" },
+      Ditangani: { class: "bg-dark", text: "Ditangani" },
+      Selesai: { class: "bg-success", text: "Selesai" },
     };
 
     const config = statusConfig[status] || {
@@ -247,17 +278,6 @@ export default function PengaduanTanamanDetail() {
       text: status,
     };
     return <span className={`badge ${config.class}`}>{config.text}</span>;
-  };
-
-  const getStatusText = (status) => {
-    const statusTexts = {
-      pending: "Menunggu",
-      assigned: "Ditugaskan",
-      in_progress: "Diproses",
-      completed: "Selesai",
-      rejected: "Ditolak",
-    };
-    return statusTexts[status] || status;
   };
 
   return (
@@ -353,7 +373,7 @@ export default function PengaduanTanamanDetail() {
                               </td>
                             </tr>
                             <tr>
-                              <td> Terakhir Diperbarui</td>
+                              <td>Terakhir Diperbarui</td>
                               <td>
                                 :{" "}
                                 {pengaduanTanaman.updatedAt
@@ -426,13 +446,15 @@ export default function PengaduanTanamanDetail() {
             </div>
           </div>
 
+          {/* Card Aksi */}
           <div className="row mb-4">
             <div className="col-md-12">
               <div className="card border-0 rounded shadow-sm border-top-success">
                 <div className="card-body">
                   <h6>Aksi</h6>
                   <hr />
-                  {/* Assign POPT */}
+
+                  {/* Assign POPT - Hanya tampil jika status Pending */}
                   {pengaduanTanaman.status === "Pending" && (
                     <button
                       onClick={() => setShowAssignModal(true)}
@@ -442,112 +464,137 @@ export default function PengaduanTanamanDetail() {
                       Tugaskan ke POPT
                     </button>
                   )}
-
-                  {/* Update Status */}
-                  <div className="dropdown mb-2">
-                    <button
-                      className="btn btn-primary w-100 dropdown-toggle"
-                      type="button"
-                      data-bs-toggle="dropdown"
-                    >
-                      <i className="fa fa-edit me-2"></i>
-                      Update Status
-                    </button>
-                    <ul className="dropdown-menu w-100">
-                      <li>
-                        <button
-                          className="dropdown-item"
-                          onClick={() => handleUpdateStatus("assigned")}
-                        >
-                          Ditugaskan
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          className="dropdown-item"
-                          onClick={() => handleUpdateStatus("in_progress")}
-                        >
-                          Diproses
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          className="dropdown-item"
-                          onClick={() => handleUpdateStatus("completed")}
-                        >
-                          Selesai
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          className="dropdown-item"
-                          onClick={() => handleUpdateStatus("rejected")}
-                        >
-                          Ditolak
-                        </button>
-                      </li>
-                    </ul>
-                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Card Upload Hasil Laporan - Tampil jika status completed */}
+          {/* Card Upload/Mark As Handled - Tampil jika status Diverifikasi */}
           {pengaduanTanaman.status === "Diverifikasi" && (
             <div className="row">
               <div className="col-md-12">
                 <div className="card border-0 rounded shadow-sm">
                   <div className="card-header bg-success text-white">
                     <h6 className="mb-0">
-                      <i className="fa fa-file-upload me-2"></i>
-                      Hasil Laporan Tanaman
+                      <i className="fa fa-clipboard-check me-2"></i>
+                      Tindak Lanjut Pengaduan
                     </h6>
                   </div>
                   <div className="card-body">
-                    {pengaduanTanaman.file ? (
-                      <div>
-                        <div className="alert alert-success">
-                          <i className="fa fa-check-circle me-2"></i>
-                          Laporan sudah diupload
-                        </div>
-                        <div className="mb-3">
-                          <label className="text-muted small">
-                            File Laporan
-                          </label>
-                          <div className="d-flex align-items-center gap-2 mt-2">
+                    <div className="alert alert-info">
+                      <i className="fa fa-info-circle me-2"></i>
+                      Pengaduan telah diverifikasi oleh POPT. Pilih tindakan:
+                    </div>
+
+                    <div className="row g-3">
+                      {/* Opsi 1: Tandai Ditangani */}
+                      <div className="col-md-6">
+                        <div className="card border-primary h-100">
+                          <div className="card-body text-center">
                             <i
-                              className="fa fa-file-pdf text-danger"
-                              style={{ fontSize: "2rem" }}
+                              className="fa fa-check-circle text-primary mb-3"
+                              style={{ fontSize: "3rem" }}
                             ></i>
-                            <div>
-                              <p className="mb-0 fw-bold">Laporan Pengaduan</p>
-                              <a
-                                href={pengaduanTanaman.file}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="btn btn-sm btn-outline-primary mt-1"
-                              >
-                                <i className="fa fa-download me-1"></i>
-                                Download Laporan
-                              </a>
-                            </div>
+                            <h6 className="card-title">Tandai Ditangani</h6>
+                            <p className="card-text small text-muted">
+                              Gunakan opsi ini jika masalah sudah dapat
+                              ditangani berdasarkan catatan POPT tanpa perlu
+                              upload file laporan lengkap.
+                            </p>
+                            <button
+                              onClick={handleMarkAsHandled}
+                              className="btn btn-primary w-100"
+                            >
+                              <i className="fa fa-check me-2"></i>
+                              Tandai Ditangani
+                            </button>
                           </div>
                         </div>
                       </div>
+
+                      {/* Opsi 2: Upload Laporan */}
+                      <div className="col-md-6">
+                        <div className="card border-success h-100">
+                          <div className="card-body text-center">
+                            <i
+                              className="fa fa-file-upload text-success mb-3"
+                              style={{ fontSize: "3rem" }}
+                            ></i>
+                            <h6 className="card-title">
+                              Upload Laporan Lengkap
+                            </h6>
+                            <p className="card-text small text-muted">
+                              Upload file laporan hasil pemeriksaan lengkap jika
+                              diperlukan dokumentasi detail.
+                            </p>
+                            <button
+                              onClick={() => setShowUploadModal(true)}
+                              className="btn btn-success w-100"
+                            >
+                              <i className="fa fa-upload me-2"></i>
+                              Upload Laporan
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Card Hasil Laporan - Tampil jika status Selesai atau Ditangani */}
+          {(pengaduanTanaman.status === "Selesai" ||
+            pengaduanTanaman.status === "Ditangani") && (
+            <div className="row">
+              <div className="col-md-12">
+                <div className="card border-0 rounded shadow-sm">
+                  <div className="card-header bg-success text-white">
+                    <h6 className="mb-0">
+                      <i className="fa fa-clipboard-check me-2"></i>
+                      Status Penanganan
+                    </h6>
+                  </div>
+                  <div className="card-body">
+                    {pengaduanTanaman.status === "Ditangani" ? (
+                      <div className="alert alert-success">
+                        <i className="fa fa-check-circle me-2"></i>
+                        Pengaduan telah ditangani berdasarkan catatan POPT
+                      </div>
                     ) : (
                       <div>
-                        <div className="alert alert-warning">
-                          <i className="fa fa-exclamation-triangle me-2"></i>
-                          Belum ada laporan yang diupload
+                        <div className="alert alert-success">
+                          <i className="fa fa-check-circle me-2"></i>
+                          Laporan sudah diupload dan pengaduan selesai
                         </div>
-                        <button
-                          onClick={() => setShowUploadModal(true)}
-                          className="btn btn-success w-100"
-                        >
-                          <i className="fa fa-upload me-2"></i>
-                          Upload Hasil Laporan
-                        </button>
+                        {pengaduanTanaman.file && (
+                          <div className="mb-3">
+                            <label className="text-muted small">
+                              File Laporan
+                            </label>
+                            <div className="d-flex align-items-center gap-2 mt-2">
+                              <i
+                                className="fa fa-file-pdf text-danger"
+                                style={{ fontSize: "2rem" }}
+                              ></i>
+                              <div>
+                                <p className="mb-0 fw-bold">
+                                  Laporan Pengaduan
+                                </p>
+                                <a
+                                  href={pengaduanTanaman.file}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="btn btn-sm btn-outline-primary mt-1"
+                                >
+                                  <i className="fa fa-download me-1"></i>
+                                  Download Laporan
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -557,6 +604,7 @@ export default function PengaduanTanamanDetail() {
           )}
         </div>
 
+        {/* Modal Assign POPT */}
         {showAssignModal && (
           <div
             className="modal show d-block"
@@ -599,6 +647,7 @@ export default function PengaduanTanamanDetail() {
                     type="button"
                     className="btn btn-primary"
                     onClick={handleAssignPopt}
+                    disabled={!selectedPopt}
                   >
                     Tugaskan
                   </button>
@@ -608,6 +657,7 @@ export default function PengaduanTanamanDetail() {
           </div>
         )}
 
+        {/* Modal Upload Laporan */}
         {showUploadModal && (
           <div
             className="modal show d-block"
@@ -626,7 +676,6 @@ export default function PengaduanTanamanDetail() {
                     onClick={() => {
                       setShowUploadModal(false);
                       setLaporanFile(null);
-                      setLaporanKeterangan("");
                     }}
                   ></button>
                 </div>
@@ -659,7 +708,6 @@ export default function PengaduanTanamanDetail() {
                     onClick={() => {
                       setShowUploadModal(false);
                       setLaporanFile(null);
-                      setLaporanKeterangan("");
                     }}
                   >
                     Batal
