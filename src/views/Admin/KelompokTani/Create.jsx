@@ -1,57 +1,51 @@
-//import react
 import { useState } from "react";
-
-//import react router dom
 import { Link, useNavigate } from "react-router-dom";
-
-//import layout
-import LayoutAdmin from "../../../layouts/Admin";
-
-//import api
 import Api from "../../../services/Api";
-
-//import js cookie
+import LayoutAdmin from "../../../layouts/Admin";
 import Cookies from "js-cookie";
-
-//import toast
 import toast from "react-hot-toast";
 
-export default function WilayahCreate() {
+export default function KelompokTaniCreate() {
+  //title page
+  document.title = "Tambah Kelompok Tani - Admin";
+
+  //navigate
   const navigate = useNavigate();
 
-  const [kodeWilayah, setKodeWilayah] = useState("");
+  //define state
   const [nama, setNama] = useState("");
+
+  //define state errors
   const [errors, setErrors] = useState({});
 
-  //token from cookies
+  //define state loading
+  const [loading, setLoading] = useState(false);
+
   const token = Cookies.get("token");
 
-  const storeWilayah = async (e) => {
+  //method createKelompokTani
+  const createKelompokTani = async (e) => {
     e.preventDefault();
 
-    //define formData
-    const formData = new FormData();
-
-    //append data to "formData"
-    formData.append("nama", nama);
-    formData.append("kode", kodeWilayah);
-    //sending data
-    await Api.post("/api/wilayah", formData, {
-      //header
-      headers: {
-        //header Bearer + Token
-        Authorization: `Bearer ${token}`,
+    await Api.post(
+      "/api/kelompok-tani",
+      {
+        //data
+        nama: nama,
       },
-    })
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
       .then((response) => {
         //show toast
         toast.success(response.data.message, {
           position: "top-right",
           duration: 4000,
         });
-
-        //redirect
-        navigate("/admin/wilayah");
+        navigate("/admin/kelompok-tani");
       })
       .catch((error) => {
         setErrors(error.response.data);
@@ -65,7 +59,7 @@ export default function WilayahCreate() {
           <div className="row">
             <div className="col-md-12">
               <Link
-                to="/admin/wilayah"
+                to="/admin/kelompok-tani"
                 className="btn btn-md btn-primary border-0 shadow-sm mb-3"
                 type="button"
               >
@@ -76,32 +70,20 @@ export default function WilayahCreate() {
                   {errors.message && (
                     <div className="alert alert-danger">{errors.message}</div>
                   )}
-                  <h6>Tambah Wilayah</h6>
+                  <h6>Tambah Kelompok Tani</h6>
                   <hr />
-                  <form onSubmit={storeWilayah}>
-                    <div className="mb-3">
-                      <label className="form-label fw-bold">Kode Wilayah</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={kodeWilayah}
-                        onChange={(e) => setKodeWilayah(e.target.value)}
-                        placeholder="Kode Wilayah"
-                      />
-                    </div>
-                    {errors.kode && (
-                      <div className="alert alert-danger">{errors.kode[0]}</div>
-                    )}
+                  <form onSubmit={createKelompokTani}>
                     <div className="mb-3">
                       <label className="form-label fw-bold">
-                        Kabupaten/Kota
+                        Nama Kelompok Tani{" "}
+                        <span className="text-danger">*</span>
                       </label>
                       <input
                         type="text"
                         className="form-control"
                         value={nama}
                         onChange={(e) => setNama(e.target.value)}
-                        placeholder="Nama Wilayah"
+                        placeholder="Masukkan nama kelompok tani"
                       />
                     </div>
                     {errors.nama && (
@@ -111,8 +93,18 @@ export default function WilayahCreate() {
                       <button
                         type="submit"
                         className="btn btn-md btn-primary me-2"
+                        disabled={loading}
                       >
-                        <i className="fa fa-save"></i> Simpan
+                        {loading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2"></span>
+                            Menyimpan...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fa fa-save"></i> Simpan
+                          </>
+                        )}
                       </button>
                       <button type="reset" className="btn btn-md btn-warning">
                         <i className="fa fa-redo"></i> Reset

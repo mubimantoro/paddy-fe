@@ -27,11 +27,11 @@ export default function KecamatanIndex() {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      setKecamatan(response.data.data);
+      setKecamatan(response.data.data.kecamatan);
       setPagination(() => ({
-        currentPage: response.data.pagination.page,
-        perPage: response.data.pagination.size,
-        total: response.data.pagination.totalItems,
+        currentPage: response.data.data.pagination.page,
+        perPage: response.data.data.pagination.limit,
+        total: response.data.data.pagination.total_items,
       }));
     });
   };
@@ -101,9 +101,6 @@ export default function KecamatanIndex() {
                             No.
                           </th>
                           <th className="border-0" style={{ width: "15%" }}>
-                            Kode Wilayah
-                          </th>
-                          <th className="border-0" style={{ width: "15%" }}>
                             Nama Wilayah
                           </th>
                           <th className="border-0" style={{ width: "15%" }}>
@@ -124,8 +121,7 @@ export default function KecamatanIndex() {
                                   (pagination.currentPage - 1) *
                                     pagination.perPage}
                               </td>
-                              <td>{item.kode || "-"}</td>
-                              <td>{item.wilayah?.nama || "-"}</td>
+                              <td>{item.wilayah_nama || "-"}</td>
                               <td>{item.nama}</td>
                               <td className="text-center">
                                 <Link

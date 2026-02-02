@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import LayoutAdmin from "../../../layouts/Admin";
 import Cookies from "js-cookie";
 import Api from "../../../services/Api";
-import hasAnyPermission from "../../../utils/Permissions";
 import { Link } from "react-router-dom";
 import Pagination from "../../../components/general/Pagination";
 import { confirmAlert } from "react-confirm-alert";
@@ -24,18 +23,16 @@ export default function UsersIndex() {
 
   const fetchData = async (pageNumber = 1) => {
     const page = pageNumber ? pageNumber : pagination.currentPage;
-
-    await Api.get(`/api/admin/users?page=${page}`, {
+    await Api.get(`/api/users?page=${page}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      setUsers(response.data.data);
-
+      setUsers(response.data.data.users);
       setPagination(() => ({
-        currentPage: response.data.pagination.page,
-        perPage: response.data.pagination.size,
-        total: response.data.pagination.totalItems,
+        currentPage: response.data.data.pagination.page,
+        perPage: response.data.data.pagination.limit,
+        total: response.data.data.pagination.total_items,
       }));
     });
   };
@@ -43,11 +40,6 @@ export default function UsersIndex() {
   useEffect(() => {
     fetchData();
   }, []);
-
-  const searchData = async (e) => {
-    setKeywords(e.target.value);
-    fetchData(1, e.target.value);
-  };
 
   const deleteUser = (id) => {
     confirmAlert({
@@ -57,7 +49,7 @@ export default function UsersIndex() {
         {
           label: "Ya",
           onClick: async () => {
-            await Api.delete(`/api/admin/users/${id}`, {
+            await Api.delete(`/api/users/${id}`, {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
@@ -92,7 +84,7 @@ export default function UsersIndex() {
                     className="btn btn-md btn-primary border-0 shadow-sm w-100"
                     type="button"
                   >
-                    <i className="fa fa-plus-circle"></i> Tambah Baru
+                    <i className="fa fa-plus-circle"></i> Tambah User Baru
                   </Link>
                 </div>
               </div>
@@ -109,9 +101,21 @@ export default function UsersIndex() {
                           <th className="border-0" style={{ width: "5%" }}>
                             No.
                           </th>
-                          <th className="border-0">Nama Lengkap</th>
-                          <th className="border-0">Username</th>
-                          <th className="border-0">Roles</th>
+                          <th className="border-0" style={{ width: "15%" }}>
+                            Username
+                          </th>
+                          <th className="border-0" style={{ width: "20%" }}>
+                            Nama Lengkap
+                          </th>
+                          <th className="border-0" style={{ width: "15%" }}>
+                            Nomor HP
+                          </th>
+                          <th className="border-0" style={{ width: "15%" }}>
+                            Kelompok Tani
+                          </th>
+                          <th className="border-0" style={{ width: "15%" }}>
+                            Role
+                          </th>
                           <th className="border-0" style={{ width: "15%" }}>
                             Aksi
                           </th>
@@ -122,21 +126,19 @@ export default function UsersIndex() {
                           users.map((item, index) => (
                             <tr key={index}>
                               <td className="fw-bold text-center">
-                                {++index +
+                                {index +
+                                  1 +
                                   (pagination.currentPage - 1) *
                                     pagination.perPage}
                               </td>
-                              <td>{item.nama_lengkap}</td>
                               <td>{item.username}</td>
+                              <td>{item.nama_lengkap}</td>
+                              <td>{item.nomor_hp}</td>
+                              <td>{item.kelompok_tani_nama || "-"}</td>
                               <td>
-                                {item.roles.map((role, index) => (
-                                  <span
-                                    className="btn btn-warning btn-sm shadow-sm border-0 ms-2 mb-2 fw-normal"
-                                    key={index}
-                                  >
-                                    {role.name}
-                                  </span>
-                                ))}
+                                <span className="badge bg-primary">
+                                  {item.role_name || "-"}
+                                </span>
                               </td>
                               <td className="text-center">
                                 <Link
@@ -145,6 +147,7 @@ export default function UsersIndex() {
                                 >
                                   <i className="fa fa-pencil-alt"></i>
                                 </Link>
+
                                 <button
                                   onClick={() => deleteUser(item.id)}
                                   className="btn btn-danger btn-sm"
@@ -156,12 +159,12 @@ export default function UsersIndex() {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={5}>
+                            <td colSpan={7}>
                               <div
                                 className="alert alert-danger border-0 rounded shadow-sm w-100 text-center"
                                 role="alert"
                               >
-                                Data Belum Tersedia!.
+                                Data Belum Tersedia!
                               </div>
                             </td>
                           </tr>

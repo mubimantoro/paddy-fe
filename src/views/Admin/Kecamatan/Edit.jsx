@@ -28,7 +28,6 @@ export default function KecamatanEdit() {
 
   //define state for form
   const [nama, setNama] = useState("");
-  const [kode, setKode] = useState("");
   const [wilayahId, setWilayahId] = useState("");
   const [errors, setErrors] = useState({});
 
@@ -46,7 +45,7 @@ export default function KecamatanEdit() {
       },
     }).then((response) => {
       //set response data to state
-      setWilayah(response.data.data.wilayah);
+      setWilayah(response.data.data);
     });
   };
 
@@ -59,9 +58,8 @@ export default function KecamatanEdit() {
       },
     }).then((response) => {
       //set response data to state
-      setNama(response.data.data.kecamatan.nama);
-      setKode(response.data.data.kecamatan.kode);
-      setWilayahId(response.data.data.kecamatan.wilayahId);
+      setNama(response.data.data.nama);
+      setWilayahId(response.data.data.wilayah_id);
     });
   };
 
@@ -76,8 +74,7 @@ export default function KecamatanEdit() {
 
     const formData = new FormData();
     formData.append("nama", nama);
-    formData.append("kode", kode);
-    formData.append("wilayahId", wilayahId);
+    formData.append("wilayah_id", wilayahId);
 
     //sending data
     await Api.put(`/api/kecamatan/${id}`, formData, {
@@ -135,19 +132,6 @@ export default function KecamatanEdit() {
                   </h6>
                   <hr />
                   <form onSubmit={updateKecamatan}>
-                    <div className="mb-3">
-                      <label className="form-label fw-bold">Kode Wilayah</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={kode}
-                        onChange={(e) => setKode(e.target.value)}
-                        placeholder="Kode Wilayah"
-                      />
-                    </div>
-                    {errors.kode && (
-                      <div className="alert alert-danger">{errors.kode}</div>
-                    )}
                     <div className="mb-3">
                       <label className="form-label fw-bold">Kecamatan</label>
                       <input

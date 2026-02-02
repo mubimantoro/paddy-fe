@@ -27,11 +27,11 @@ export default function WilayahIndex() {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      setWilayah(response.data.data);
+      setWilayah(response.data.data.wilayah);
       setPagination(() => ({
-        currentPage: response.data.pagination.page,
-        perPage: response.data.pagination.size,
-        total: response.data.pagination.totalItems,
+        currentPage: response.data.data.pagination.page,
+        perPage: response.data.data.pagination.limit,
+        total: response.data.data.pagination.total_items,
       }));
     });
   };

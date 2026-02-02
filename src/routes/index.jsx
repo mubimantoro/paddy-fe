@@ -20,6 +20,9 @@ import PoptDetail from "../views/Admin/Popt/Detail";
 import PoptCreate from "../views/Admin/Popt/Create";
 import UsersCreate from "../views/Admin/Users/Create";
 import UsersEdit from "../views/Admin/Users/Edit";
+import KelompokTaniIndex from "../views/Admin/KelompokTani/Index";
+import KelompokTaniCreate from "../views/Admin/KelompokTani/Create";
+import PoptEdit from "../views/Admin/Popt/Edit";
 
 export default function RoutesIndex() {
   return (
@@ -106,6 +109,15 @@ export default function RoutesIndex() {
       />
 
       <Route
+        path="/admin/popt/edit/:id"
+        element={
+          <PrivateRoutes>
+            <PoptEdit />
+          </PrivateRoutes>
+        }
+      />
+
+      <Route
         path="/admin/popt/detail/:id"
         element={
           <PrivateRoutes>
@@ -128,6 +140,24 @@ export default function RoutesIndex() {
         element={
           <PrivateRoutes>
             <PengaduanTanamanDetail />
+          </PrivateRoutes>
+        }
+      />
+
+      <Route
+        path="/admin/kelompok-tani"
+        element={
+          <PrivateRoutes>
+            <KelompokTaniIndex />
+          </PrivateRoutes>
+        }
+      />
+
+      <Route
+        path="/admin/kelompok-tani/create"
+        element={
+          <PrivateRoutes>
+            <KelompokTaniCreate />
           </PrivateRoutes>
         }
       />

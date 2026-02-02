@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import LayoutAdmin from "../../../layouts/Admin";
 import Api from "../../../services/Api";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 
-export default function PoptCreate() {
+export default function PoptEdit() {
+  document.title = "Edit POPT - SIBalintan";
+
   const navigate = useNavigate();
+  const { id } = useParams();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -20,7 +23,7 @@ export default function PoptCreate() {
   const token = Cookies.get("token");
 
   const fetchDataKecamatan = async () => {
-    await Api.get("/api/kecamatan", {
+    await Api.get(`/api/kecamatan`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -29,21 +32,33 @@ export default function PoptCreate() {
     });
   };
 
+  const fetchDataPOPT = async () => {
+    await Api.get(`/api/users/popt/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }).then((response) => {
+      setUsername(response.data.data.username);
+      setNamaLengkap(response.data.data.nama_lengkap);
+      setNomorHp(response.data.data.nomor_hp);
+      setKecamatanId(response.data.data.kecamatan_id || "");
+    });
+  };
+
   useEffect(() => {
     fetchDataKecamatan();
+    fetchDataPOPT();
   }, []);
 
-  const storePOPT = async (e) => {
+  const updatePOPT = async (e) => {
     e.preventDefault();
 
     const formData = new FormData();
-    formData.append("username", username);
-    formData.append("password", password);
     formData.append("nama_lengkap", namaLengkap);
     formData.append("nomor_hp", nomorHp);
     formData.append("kecamatan_id", kecamatanId);
 
-    await Api.post("/api/users/popt", formData, {
+    await Api.put(`/api/users/popt/${id}`, formData, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -60,12 +75,6 @@ export default function PoptCreate() {
         const { message } = error.response.data;
         const errorMessages = {};
 
-        if (message.toLowerCase().includes("username")) {
-          errorMessages.username = message;
-        }
-        if (message.toLowerCase().includes("password")) {
-          errorMessages.password = message;
-        }
         if (message.toLowerCase().includes("nama_lengkap")) {
           errorMessages.namaLengkap = message;
         }
@@ -95,40 +104,23 @@ export default function PoptCreate() {
               </Link>
               <div className="card border-0 rounded shadow-sm border-top-success">
                 <div className="card-body">
-                  <h6>Tambah POPT</h6>
+                  <h6>
+                    <i className="fa fa-user"></i> Edit POPT
+                  </h6>
                   <hr />
-                  <form onSubmit={storePOPT}>
+                  <form onSubmit={updatePOPT}>
                     <div className="mb-3">
                       <label className="form-label fw-bold">Username</label>
                       <input
                         type="text"
                         className="form-control"
                         value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        placeholder="Username"
+                        disabled
                       />
+                      <small className="text-muted">
+                        Username tidak dapat diubah
+                      </small>
                     </div>
-                    {errors.username && (
-                      <div className="alert alert-danger">
-                        {errors.username}
-                      </div>
-                    )}
-
-                    <div className="mb-3">
-                      <label className="form-label fw-bold">Password</label>
-                      <input
-                        type="password"
-                        className="form-control"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Password"
-                      />
-                    </div>
-                    {errors.password && (
-                      <div className="alert alert-danger">
-                        {errors.password}
-                      </div>
-                    )}
 
                     <div className="mb-3">
                       <label className="form-label fw-bold">Nama Lengkap</label>
@@ -186,7 +178,7 @@ export default function PoptCreate() {
                         type="submit"
                         className="btn btn-md btn-primary me-2"
                       >
-                        <i className="fa fa-save"></i> Simpan
+                        <i className="fa fa-save"></i> Perbarui
                       </button>
                       <button type="reset" className="btn btn-md btn-warning">
                         <i className="fa fa-redo"></i> Reset

@@ -40,17 +40,13 @@ export default function login() {
       password: password,
     })
       .then((response) => {
-        //set token to cookies
-        Cookies.set("token", response.data.data.token);
-
-        //set user to cookies
-        Cookies.set("user", JSON.stringify(response.data.data.user));
-
-        //set permissions to cookies
-        // Cookies.set("permissions", JSON.stringify(response.data.permissions));
+        const { accessToken, refreshToken, user } = response.data.data;
+        Cookies.set("token", accessToken);
+        Cookies.set("refreshToken", refreshToken);
+        Cookies.set("user", JSON.stringify(user));
 
         //show toast
-        toast.success("Login Successfully!", {
+        toast.success(response.data.message || "Login Berhasil!", {
           position: "top-right",
           duration: 4000,
         });
@@ -105,7 +101,7 @@ export default function login() {
                         className="form-control"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        placeholder="Enter Email Address"
+                        placeholder="Enter Username"
                       />
                     </div>
                     {errors.username && (

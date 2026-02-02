@@ -17,122 +17,104 @@ import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 
 export default function UsersEdit() {
-  //title page
-  document.title = "Edit User - Desa Digital";
+  document.title = "Edit User - SIBalintan";
 
-  //navigata
   const navigate = useNavigate();
-
-  //get ID from parameter URL
   const { id } = useParams();
 
-  //define state for form
+  const [username, setUsername] = useState("");
   const [namaLengkap, setNamaLengkap] = useState("");
   const [nomorHp, setNomorHp] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [rolesData, setRolesData] = useState([]);
-  const [errors, setErros] = useState([]);
+  const [kelompokTaniId, setKelompokTaniId] = useState("");
+  const [roleId, setRoleId] = useState("");
+  const [isActive, setIsActive] = useState(true);
+  const [errors, setErrors] = useState({});
 
-  //define state "roles"
+  const [kelompokTani, setKelompokTani] = useState([]);
   const [roles, setRoles] = useState([]);
 
-  //token from cookies
   const token = Cookies.get("token");
 
-  //function "fetchDataRoles"
-  const fetchDataRoles = async () => {
-    await Api.get("/api/admin/roles", {
-      //header
+  const fetchDataKelompokTani = async () => {
+    await Api.get(`/api/kelompok-tani`, {
       headers: {
-        //header Bearer + Token
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      //set response data to state "roles"
+      setKelompokTani(response.data.data);
+    });
+  };
+
+  const fetchDataRoles = async () => {
+    await Api.get("/api/roles", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }).then((response) => {
       setRoles(response.data.data);
     });
   };
 
-  //function "fetchDataUser"
   const fetchDataUser = async () => {
-    await Api.get(`/api/admin/users/${id}`, {
-      //header
+    await Api.get(`/api/users/${id}`, {
       headers: {
-        //header Bearer + Token
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      //set response data to state
-      setNamaLengkap(response.data.data.namaLengkap);
-      setNomorHp(response.data.data.nomorHp);
       setUsername(response.data.data.username);
-      setRolesData(response.data.data.roles.map((obj) => obj.name));
+      setNamaLengkap(response.data.data.nama_lengkap);
+      setNomorHp(response.data.data.nomor_hp);
+      setKelompokTaniId(response.data.data.kelompok_tani_id || "");
+      setRoleId(response.data.data.role_id || "");
     });
   };
 
-  //useEffect
   useEffect(() => {
-    //call function "fetchDataRoles"
+    fetchDataKelompokTani();
     fetchDataRoles();
-
-    //call function "fetchDataUser"
     fetchDataUser();
   }, []);
 
-  //define function "handleCheckboxChange"
-  const handleCheckboxChange = (e) => {
-    //define data
-    let data = rolesData;
-
-    //check item already exists, if so, remove with filter
-    if (data.some((name) => name === e.target.value)) {
-      data = data.filter((name) => name !== e.target.value);
-    } else {
-      //push new item to array
-      data.push(e.target.value);
-    }
-
-    //set data to state
-    setRolesData(data);
-  };
-
-  //function "updateUser"
   const updateUser = async (e) => {
     e.preventDefault();
 
-    //sending data
-    await Api.put(
-      `/api/admin/users/${id}`,
-      {
-        //data
-        namaLengkap: namaLengkap,
-        nomorHp: nomorHp,
-        username: username,
-        password: password,
-        roles: rolesData,
+    const formData = new FormData();
+    formData.append("nama_lengkap", namaLengkap);
+    formData.append("nomor_hp", nomorHp);
+    formData.append("kelompok_tani_id", kelompokTaniId);
+    formData.append("role_id", roleId);
+
+    await Api.put(`/api/users/${id}`, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
-      {
-        //header
-        headers: {
-          //header Bearer + Token
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    )
+    })
       .then((response) => {
-        //show toast
         toast.success(response.data.message, {
           position: "top-right",
           duration: 4000,
         });
 
-        //redirect
         navigate("/admin/users");
       })
       .catch((error) => {
-        //set error message to state "errors"
-        setErros(error.response.data);
+        const { message } = error.response.data;
+        const errorMessages = {};
+
+        if (message.toLowerCase().includes("nama_lengkap")) {
+          errorMessages.namaLengkap = message;
+        }
+        if (message.toLowerCase().includes("nomor_hp")) {
+          errorMessages.nomorHp = message;
+        }
+        if (message.toLowerCase().includes("kelompok_tani")) {
+          errorMessages.kelompokTaniId = message;
+        }
+        if (message.toLowerCase().includes("role")) {
+          errorMessages.roleId = message;
+        }
+
+        setErrors(errorMessages);
       });
   };
 
@@ -156,121 +138,98 @@ export default function UsersEdit() {
                   </h6>
                   <hr />
                   <form onSubmit={updateUser}>
-                    <div className="row">
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="form-label fw-bold">
-                            Nama Lengkap
-                          </label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={namaLengkap}
-                            onChange={(e) => setNamaLengkap(e.target.value)}
-                            placeholder="Nama Lengkap"
-                          />
-                        </div>
-                        {errors.namaLengkap && (
-                          <div className="alert alert-danger">
-                            {errors.namaLengkap[0]}
-                          </div>
-                        )}
-                      </div>
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="form-label fw-bold">Username</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="Username"
-                          />
-                        </div>
-                        {errors.username && (
-                          <div className="alert alert-danger">
-                            {errors.username[0]}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="row">
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="form-label fw-bold">Nomor HP</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={nomorHp}
-                            onChange={(e) => setNomorHp(e.target.value)}
-                            placeholder="Nomor HP"
-                          />
-                        </div>
-                        {errors.nomorHp && (
-                          <div className="alert alert-danger">
-                            {errors.nomorHp[0]}
-                          </div>
-                        )}
-                      </div>
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="form-label fw-bold">Password</label>
-                          <input
-                            type="password"
-                            className="form-control"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter Password"
-                          />
-                        </div>
-                        {errors.password && (
-                          <div className="alert alert-danger">
-                            {errors.password[0]}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <hr />
                     <div className="mb-3">
-                      <label className="fw-bold">Roles</label>
-                      <br />
-                      {roles.map((role) => (
-                        <div
-                          className="form-check form-check-inline"
-                          key={Math.random()}
-                        >
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            value={role.name}
-                            defaultChecked={rolesData.some(
-                              (name) => name === role.name ?? true
-                            )}
-                            onChange={handleCheckboxChange}
-                            id={`check-${role.id}`}
-                          />
-                          <label
-                            className="form-check-label fw-normal"
-                            htmlFor={`check-${role.id}`}
-                          >
-                            {role.name}
-                          </label>
-                        </div>
-                      ))}
-
-                      {errors.roles && (
-                        <div className="alert alert-danger mt-2">
-                          {errors.roles[0]}
-                        </div>
-                      )}
+                      <label className="form-label fw-bold">Username</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={username}
+                        disabled
+                      />
+                      <small className="text-muted">
+                        Username tidak dapat diubah
+                      </small>
                     </div>
+
+                    <div className="mb-3">
+                      <label className="form-label fw-bold">Nama Lengkap</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={namaLengkap}
+                        onChange={(e) => setNamaLengkap(e.target.value)}
+                        placeholder="Nama Lengkap"
+                      />
+                    </div>
+                    {errors.namaLengkap && (
+                      <div className="alert alert-danger">
+                        {errors.namaLengkap}
+                      </div>
+                    )}
+
+                    <div className="mb-3">
+                      <label className="form-label fw-bold">Nomor HP</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={nomorHp}
+                        onChange={(e) => setNomorHp(e.target.value)}
+                        placeholder="081234567890"
+                      />
+                    </div>
+                    {errors.nomorHp && (
+                      <div className="alert alert-danger">{errors.nomorHp}</div>
+                    )}
+
+                    <div className="mb-3">
+                      <label className="form-label fw-bold">Role</label>
+                      <select
+                        className="form-select"
+                        value={roleId}
+                        onChange={(e) => setRoleId(e.target.value)}
+                      >
+                        <option value="">-- Pilih Role --</option>
+                        {roles.map((item) => (
+                          <option value={item.id} key={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {errors.roleId && (
+                      <div className="alert alert-danger">{errors.roleId}</div>
+                    )}
+
+                    <div className="mb-3">
+                      <label className="form-label fw-bold">
+                        Kelompok Tani{" "}
+                        <small className="text-muted">(Opsional)</small>
+                      </label>
+                      <select
+                        className="form-select"
+                        value={kelompokTaniId}
+                        onChange={(e) => setKelompokTaniId(e.target.value)}
+                      >
+                        <option value="">-- Pilih Kelompok Tani --</option>
+                        {kelompokTani.map((item) => (
+                          <option value={item.id} key={item.id}>
+                            {item.nama}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {errors.kelompokTaniId && (
+                      <div className="alert alert-danger">
+                        {errors.kelompokTaniId}
+                      </div>
+                    )}
+
                     <div>
                       <button
                         type="submit"
                         className="btn btn-md btn-primary me-2"
                       >
-                        <i className="fa fa-save"></i> Update
+                        <i className="fa fa-save"></i> Perbarui
                       </button>
                       <button type="reset" className="btn btn-md btn-warning">
                         <i className="fa fa-redo"></i> Reset

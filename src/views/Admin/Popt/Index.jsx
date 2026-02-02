@@ -8,7 +8,7 @@ import { confirmAlert } from "react-confirm-alert";
 import toast from "react-hot-toast";
 
 export default function PoptIndex() {
-  document.title = "Petugas POPT - SIBalintan";
+  document.title = "POPT - SIBalintan";
 
   const [popt, setPopt] = useState([]);
 
@@ -22,23 +22,53 @@ export default function PoptIndex() {
 
   const fetchData = async (pageNumber = 1) => {
     const page = pageNumber ? pageNumber : pagination.currentPage;
-    await Api.get(`/api/admin/popt?page=${page}`, {
+    await Api.get(`/api/users/popt?page=${page}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      setPopt(response.data.data);
-      // setPagination(() => ({
-      //   currentPage: response.data.pagination.page,
-      //   perPage: response.data.pagination.size,
-      //   total: response.data.pagination.totalItems,
-      // }));
+      setPopt(response.data.data.popt);
+      setPagination(() => ({
+        currentPage: response.data.data.pagination.page,
+        perPage: response.data.data.pagination.limit,
+        total: response.data.data.pagination.total_items,
+      }));
     });
   };
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  const deletePOPT = (id) => {
+    confirmAlert({
+      title: "Hapus Data",
+      message: "Apakah Anda yakin ingin menghapus data ini ?",
+      buttons: [
+        {
+          label: "Ya",
+          onClick: async () => {
+            await Api.delete(`/api/users/popt/${id}`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }).then((response) => {
+              toast.success(response.data.message, {
+                position: "top-right",
+                duration: 4000,
+              });
+
+              fetchData();
+            });
+          },
+        },
+        {
+          label: "Tidak",
+          onClick: () => {},
+        },
+      ],
+    });
+  };
 
   return (
     <LayoutAdmin>
@@ -53,7 +83,7 @@ export default function PoptIndex() {
                     className="btn btn-md btn-primary border-0 shadow-sm w-100"
                     type="button"
                   >
-                    <i className="fa fa-plus-circle"></i> Tambah Data
+                    <i className="fa fa-plus-circle"></i> Tambah POPT Baru
                   </Link>
                 </div>
               </div>
@@ -71,16 +101,19 @@ export default function PoptIndex() {
                             No.
                           </th>
                           <th className="border-0" style={{ width: "15%" }}>
-                            NIP
+                            Username
                           </th>
-                          <th className="border-0" style={{ width: "5%" }}>
-                            Nama Petugas
+                          <th className="border-0" style={{ width: "20%" }}>
+                            Nama Lengkap
                           </th>
                           <th className="border-0" style={{ width: "15%" }}>
                             Nomor HP
                           </th>
+                          <th className="border-0" style={{ width: "20%" }}>
+                            Kecamatan
+                          </th>
                           <th className="border-0" style={{ width: "15%" }}>
-                            Wilayah
+                            Aksi
                           </th>
                         </tr>
                       </thead>
@@ -94,15 +127,30 @@ export default function PoptIndex() {
                                   (pagination.currentPage - 1) *
                                     pagination.perPage}
                               </td>
-                              <td>{item.popt.nip}</td>
-                              <td>{item.namaLengkap || "-"}</td>
-                              <td>{item.nomorHp || "-"}</td>
-                              <td>{item.popt.wilayah}</td>
+                              <td>{item.username}</td>
+                              <td>{item.nama_lengkap}</td>
+                              <td>{item.nomor_hp}</td>
+                              <td>{item.kecamatan_nama || "-"}</td>
+                              <td className="text-center">
+                                <Link
+                                  to={`/admin/popt/edit/${item.id}`}
+                                  className="btn btn-primary btn-sm me-2"
+                                >
+                                  <i className="fa fa-pencil-alt"></i>
+                                </Link>
+
+                                <button
+                                  onClick={() => deletePOPT(item.id)}
+                                  className="btn btn-danger btn-sm"
+                                >
+                                  <i className="fa fa-trash"></i>
+                                </button>
+                              </td>
                             </tr>
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={6}>
+                            <td colSpan={7}>
                               <div
                                 className="alert alert-danger border-0 rounded shadow-sm w-100 text-center"
                                 role="alert"

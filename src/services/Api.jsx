@@ -1,12 +1,10 @@
-//import axios
 import axios from "axios";
 
-//import js cookie
 import Cookies from "js-cookie";
 
 const Api = axios.create({
   //set endpoint API
-  baseURL: "http://18.142.105.217:3000",
+  baseURL: "http://localhost:3000",
 
   //set header axios
   headers: {
@@ -24,15 +22,9 @@ Api.interceptors.response.use(
   (error) => {
     //check if response unauthenticated
     if (401 === error.response.status) {
-      //remove token
       Cookies.remove("token");
-
-      //remove user
+      Cookies.remove("refreshToken");
       Cookies.remove("user");
-
-      //remove permissions
-      // Cookies.remove("permissions");
-
       //redirect "/"
       window.location = "/";
     } else if (403 === error.response.status) {
@@ -42,7 +34,7 @@ Api.interceptors.response.use(
       //reject promise error
       return Promise.reject(error);
     }
-  }
+  },
 );
 
 export default Api;

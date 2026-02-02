@@ -60,14 +60,6 @@ export default function sidebar() {
           </Link>
           <Link
             className={
-              activeRoute[2] === "popt" ? "nav-link active-sidebar" : "nav-link"
-            }
-            to="/admin/popt"
-          >
-            Petugas POPT
-          </Link>
-          <Link
-            className={
               activeRoute[2] === "pengaduan-tanaman"
                 ? "nav-link active-sidebar"
                 : "nav-link"
@@ -76,6 +68,26 @@ export default function sidebar() {
           >
             Pengaduan Tanaman
           </Link>
+          <Link
+            className={
+              activeRoute[2] === "kelompok-tani"
+                ? "nav-link active-sidebar"
+                : "nav-link"
+            }
+            to="/admin/kelompok-tani"
+          >
+            Kelompok Tani
+          </Link>
+
+          <Link
+            className={
+              activeRoute[2] === "popt" ? "nav-link active-sidebar" : "nav-link"
+            }
+            to="/admin/popt"
+          >
+            Petugas POPT
+          </Link>
+
           <>
             <div className="sb-sidenav-menu-heading">Manajemen User</div>
             <a
@@ -84,8 +96,8 @@ export default function sidebar() {
                 (activeRoute[2] === "roles"
                   ? " active-sidebar"
                   : activeRoute[2] === "users"
-                  ? " active-sidebar"
-                  : "")
+                    ? " active-sidebar"
+                    : "")
               }
               href="#"
               data-bs-toggle="collapse"
@@ -112,8 +124,8 @@ export default function sidebar() {
               (activeRoute[2] === "roles"
                 ? " show"
                 : activeRoute[2] === "users"
-                ? " show"
-                : "")
+                  ? " show"
+                  : "")
             }
             id="collapseUsers"
             aria-labelledby="headingOne"

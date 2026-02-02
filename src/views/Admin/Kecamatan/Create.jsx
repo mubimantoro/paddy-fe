@@ -20,7 +20,6 @@ export default function KecamatanCreate() {
   const navigate = useNavigate();
 
   const [nama, setNama] = useState("");
-  const [kodeKecamatan, setKodeKecamatan] = useState("");
   const [wilayahId, setWilayahId] = useState("");
   const [errors, setErrors] = useState({});
 
@@ -37,7 +36,7 @@ export default function KecamatanCreate() {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      setWilayah(response.data.data.wilayah);
+      setWilayah(response.data.data);
     });
   };
 
@@ -54,8 +53,7 @@ export default function KecamatanCreate() {
 
     //append data to "formData"
     formData.append("nama", nama);
-    formData.append("kode", kodeKecamatan);
-    formData.append("wilayahId", wilayahId);
+    formData.append("wilayah_id", wilayahId);
     //sending data
     await Api.post("/api/kecamatan", formData, {
       //header
@@ -78,9 +76,6 @@ export default function KecamatanCreate() {
         const { message } = error.response.data;
         const errorMessages = {};
 
-        if (message.toLowerCase().includes("kode")) {
-          errorMessages.kode = message;
-        }
         if (message.toLowerCase().includes("nama")) {
           errorMessages.nama = message;
         }
@@ -109,19 +104,6 @@ export default function KecamatanCreate() {
                   <h6>Tambah Kecamatan</h6>
                   <hr />
                   <form onSubmit={storeKecamatan}>
-                    <div className="mb-3">
-                      <label className="form-label fw-bold">Kode Wilayah</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={kodeKecamatan}
-                        onChange={(e) => setKodeKecamatan(e.target.value)}
-                        placeholder="Kode Wilayah"
-                      />
-                    </div>
-                    {errors.kode && (
-                      <div className="alert alert-danger">{errors.kode}</div>
-                    )}
                     <div className="mb-3">
                       <label className="form-label fw-bold">Kecamatan</label>
                       <input
