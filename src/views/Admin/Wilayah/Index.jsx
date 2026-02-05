@@ -31,7 +31,7 @@ export default function WilayahIndex() {
       setPagination(() => ({
         currentPage: response.data.data.pagination.page,
         perPage: response.data.data.pagination.limit,
-        total: response.data.data.pagination.total_items,
+        total: response.data.data.pagination.total,
       }));
     });
   };

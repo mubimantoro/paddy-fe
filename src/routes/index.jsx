@@ -23,6 +23,10 @@ import UsersEdit from "../views/Admin/Users/Edit";
 import KelompokTaniIndex from "../views/Admin/KelompokTani/Index";
 import KelompokTaniCreate from "../views/Admin/KelompokTani/Create";
 import PoptEdit from "../views/Admin/Popt/Edit";
+import LaporanPengaduan from "../views/Admin/reports/LaporanPengaduan";
+import LaporanKinerjaPOPT from "../views/Admin/reports/LaporanKinerjaPopt";
+import LaporanAktivitasUser from "../views/Admin/reports/LaporanAktivitasUser";
+import LaporanPrediksiPenyakit from "../views/Admin/reports/LaporanPrediksiPenyakit";
 
 export default function RoutesIndex() {
   return (
@@ -195,6 +199,17 @@ export default function RoutesIndex() {
             <UsersEdit />
           </PrivateRoutes>
         }
+      />
+
+      <Route path="/admin/reports/pengaduan" element={<LaporanPengaduan />} />
+      <Route path="/admin/reports/popt" element={<LaporanKinerjaPOPT />} />
+      <Route
+        path="/admin/reports/prediksi"
+        element={<LaporanPrediksiPenyakit />}
+      />
+      <Route
+        path="/admin/reports/aktivitas"
+        element={<LaporanAktivitasUser />}
       />
     </Routes>
   );

@@ -20,7 +20,7 @@ export default function PoptCreate() {
   const token = Cookies.get("token");
 
   const fetchDataKecamatan = async () => {
-    await Api.get("/api/kecamatan", {
+    await Api.get("/api/kecamatan/all", {
       headers: {
         Authorization: `Bearer ${token}`,
       },

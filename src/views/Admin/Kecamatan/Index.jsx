@@ -27,7 +27,7 @@ export default function KecamatanIndex() {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      setKecamatan(response.data.data.kecamatan);
+      setKecamatan(response.data.data.kecamatan || []);
       setPagination(() => ({
         currentPage: response.data.data.pagination.page,
         perPage: response.data.data.pagination.limit,
@@ -142,7 +142,7 @@ export default function KecamatanIndex() {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={6}>
+                            <td colSpan={4}>
                               <div
                                 className="alert alert-danger border-0 rounded shadow-sm w-100 text-center"
                                 role="alert"
