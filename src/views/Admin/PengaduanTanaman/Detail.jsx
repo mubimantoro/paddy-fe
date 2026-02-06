@@ -7,724 +7,565 @@ import { confirmAlert } from "react-confirm-alert";
 import toast from "react-hot-toast";
 import DateID from "../../../utils/DateID";
 import Loading from "../../../components/general/Loading";
-
 export default function PengaduanTanamanDetail() {
-  document.title = `Detail Pengaduan Tanaman - SIBalintan`;
+  document.title = "Detail Pengaduan Tanaman - SIBalintan";
 
   const { id } = useParams();
-  const navigate = useNavigate();
-  const [pengaduanTanaman, setPengaduanTanaman] = useState({});
-  const [loadingPengaduanTanaman, setLoadingPengaduanTanaman] = useState(true);
 
-  const [poptList, setPoptList] = useState([]);
-  const [selectedPopt, setSelectedPopt] = useState("");
-  const [showAssignModal, setShowAssignModal] = useState(false);
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [laporanFile, setLaporanFile] = useState(null);
+  const [pengaduan, setPengaduan] = useState(null);
+  const [verifikasi, setVerifikasi] = useState([]);
+  const [pemeriksaan, setPemeriksaan] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showPemeriksaanModal, setShowPemeriksaanModal] = useState(false);
+
+  const [hasilPemeriksaan, setHasilPemeriksaan] = useState("");
+  const [file, setFile] = useState(null);
+  const [errors, setErrors] = useState({});
 
   const token = Cookies.get("token");
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.type !== "application/pdf") {
-        toast.error("File harus berformat PDF", {
-          position: "top-right",
-          duration: 4000,
-        });
-        return;
-      }
+  const fetchPengaduanDetail = async () => {
+    try {
+      const response = await Api.get(`/api/pengaduan-tanaman/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("Ukuran file maksimal 5MB", {
-          position: "top-right",
-          duration: 4000,
-        });
-        return;
-      }
-
-      setLaporanFile(file);
+      setPengaduan(response.data.data.pengaduanTanaman);
+      setVerifikasi(response.data.data.verifikasiPengaduanTanaman || []);
+      setPemeriksaan(response.data.data.pemeriksaanPengaduanTanaman || []);
+      setLoading(false);
+    } catch (error) {
+      toast.error("Gagal mengambil detail pengaduan");
+      setLoading(false);
     }
   };
 
-  const handleUploadLaporan = async () => {
-    if (!laporanFile) {
-      toast.error("Pilih file laporan terlebih dahulu", {
-        position: "top-right",
-        duration: 4000,
-      });
+  useEffect(() => {
+    fetchPengaduanDetail();
+  }, []);
+
+  const handleSubmitPemeriksaan = async (e) => {
+    e.preventDefault();
+    setErrors({});
+
+    if (!hasilPemeriksaan) {
+      setErrors({ hasilPemeriksaan: "Hasil pemeriksaan harus diisi" });
       return;
     }
 
-    try {
-      const formData = new FormData();
-      formData.append("file", laporanFile);
+    if (!file) {
+      setErrors({ file: "Dokumen pemeriksaan harus diupload" });
+      return;
+    }
 
-      await Api.post(
-        `/api/admin/pengaduan-tanaman/${id}/upload-laporan`,
+    const formData = new FormData();
+    formData.append("hasil_pemeriksaan", hasilPemeriksaan);
+    formData.append("file", file);
+
+    try {
+      const response = await Api.post(
+        `/api/admin/pengaduan-tanaman/${id}/pemeriksaan`,
         formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
-      toast.success("Laporan berhasil diupload", {
-        position: "top-right",
-        duration: 4000,
-      });
-
-      setShowUploadModal(false);
-      setLaporanFile(null);
-      setLaporanKeterangan("");
-      fetchDetail();
-    } catch (error) {
-      toast.error("Gagal mengupload laporan", {
-        position: "top-right",
-        duration: 4000,
-      });
-    }
-  };
-
-  const fetchDetail = async () => {
-    setLoadingPengaduanTanaman(true);
-    await Api.get(`/api/admin/pengaduan-tanaman/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }).then((response) => {
-      setPengaduanTanaman(response.data.data.pengaduan);
-      setLoadingPengaduanTanaman(false);
-    });
-  };
-
-  const handleMarkAsHandled = () => {
-    confirmAlert({
-      title: "Tandai Sebagai Ditangani",
-      message:
-        "Apakah Anda yakin ingin menandai pengaduan ini sebagai ditangani? Status akan berubah menjadi 'Ditangani' tanpa perlu upload file laporan.",
-      buttons: [
-        {
-          label: "Ya, Tandai",
-          onClick: async () => {
-            try {
-              await Api.put(
-                `/api/admin/pengaduan-tanaman/${id}/mark-handled`,
-                {},
-                {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                  },
-                }
-              );
-
-              toast.success("Pengaduan berhasil ditandai sebagai ditangani", {
-                position: "top-right",
-                duration: 4000,
-              });
-
-              fetchDetail();
-            } catch (error) {
-              toast.error(
-                error.response?.data?.message || "Gagal menandai pengaduan",
-                {
-                  position: "top-right",
-                  duration: 4000,
-                }
-              );
-            }
-          },
-        },
-        {
-          label: "Batal",
-          onClick: () => {},
-        },
-      ],
-    });
-  };
-
-  const fetchPoptList = async () => {
-    await Api.get("/api/admin/users/role/popt", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }).then((response) => {
-      setPoptList(response.data.data.users || []);
-    });
-  };
-
-  useEffect(() => {
-    fetchDetail();
-    fetchPoptList();
-  }, [id]);
-
-  const handleAssignPopt = async () => {
-    await Api.post(
-      "/api/admin/pengaduan-tanaman/assign",
-      {
-        pengaduanTanamanId: id,
-        poptId: selectedPopt,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    ).then((response) => {
       toast.success(response.data.message, {
         position: "top-right",
         duration: 4000,
       });
-      setShowAssignModal(false);
-      fetchDetail();
-    });
-  };
 
-  const handleUpdateStatus = async (newStatus) => {
-    confirmAlert({
-      title: "Update Status",
-      message: `Apakah Anda yakin ingin mengubah status menjadi ${getStatusText(
-        newStatus
-      )}?`,
-      buttons: [
-        {
-          label: "Ya",
-          onClick: async () => {
-            try {
-              await Api.put(
-                `/api/pengaduan-tanaman/${id}/status`,
-                {
-                  status: newStatus,
-                },
-                {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                  },
-                }
-              );
-
-              toast.success("Status berhasil diperbarui", {
-                position: "top-right",
-                duration: 4000,
-              });
-
-              fetchDetail();
-            } catch (error) {
-              toast.error("Gagal memperbarui status", {
-                position: "top-right",
-                duration: 4000,
-              });
-            }
-          },
-        },
-        {
-          label: "Tidak",
-          onClick: () => {},
-        },
-      ],
-    });
-  };
-
-  const handleDelete = () => {
-    confirmAlert({
-      title: "Hapus Pengaduan",
-      message: "Apakah Anda yakin ingin menghapus pengaduan ini?",
-      buttons: [
-        {
-          label: "Ya",
-          onClick: async () => {
-            try {
-              await Api.delete(`/api/admin/pengaduan-tanaman/${id}`, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              });
-
-              toast.success("Pengaduan berhasil dihapus", {
-                position: "top-right",
-                duration: 4000,
-              });
-
-              navigate("/admin/pengaduan-tanaman");
-            } catch (error) {
-              toast.error("Gagal menghapus pengaduan", {
-                position: "top-right",
-                duration: 4000,
-              });
-            }
-          },
-        },
-        {
-          label: "Tidak",
-          onClick: () => {},
-        },
-      ],
-    });
+      setShowPemeriksaanModal(false);
+      setHasilPemeriksaan("");
+      setFile(null);
+      fetchPengaduanDetail();
+    } catch (error) {
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Gagal menambahkan pemeriksaan");
+      }
+    }
   };
 
   const getStatusBadge = (status) => {
-    const statusConfig = {
-      Pending: { class: "bg-warning", text: "Menunggu" },
-      Ditugaskan: { class: "bg-info", text: "Ditugaskan" },
-      Diverifikasi: { class: "bg-primary", text: "Diverifikasi" },
-      Ditangani: { class: "bg-dark", text: "Ditangani" },
-      Selesai: { class: "bg-success", text: "Selesai" },
-    };
-
-    const config = statusConfig[status] || {
-      class: "bg-secondary",
-      text: status,
-    };
-    return <span className={`badge ${config.class}`}>{config.text}</span>;
+    switch (status) {
+      case "pending":
+        return <span className="badge bg-warning text-dark">Pending</span>;
+      case "ditugaskan":
+        return <span className="badge bg-info">Ditugaskan</span>;
+      case "dalam proses":
+        return <span className="badge bg-primary">Dalam Proses</span>;
+      case "diverifikasi":
+        return <span className="badge bg-success">Diverifikasi</span>;
+      case "selesai":
+        return <span className="badge bg-success">Selesai</span>;
+      case "ditolak":
+        return <span className="badge bg-danger">Ditolak</span>;
+      default:
+        return <span className="badge bg-secondary">{status}</span>;
+    }
   };
+
+  const canUploadPemeriksaan = () => {
+    return pengaduan?.status === "diverifikasi";
+  };
+
+  if (loading) {
+    return (
+      <LayoutAdmin>
+        <main>
+          <div className="container-fluid mb-5 mt-5">
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="mt-2">Memuat data...</p>
+            </div>
+          </div>
+        </main>
+      </LayoutAdmin>
+    );
+  }
+
+  if (!pengaduan) {
+    return (
+      <LayoutAdmin>
+        <main>
+          <div className="container-fluid mb-5 mt-5">
+            <div className="alert alert-danger">
+              <i className="fas fa-exclamation-triangle me-2"></i>
+              Data pengaduan tidak ditemukan
+            </div>
+            <Link to="/admin/pengaduan-tanaman" className="btn btn-primary">
+              <i className="fa fa-arrow-left me-2"></i>
+              Kembali
+            </Link>
+          </div>
+        </main>
+      </LayoutAdmin>
+    );
+  }
 
   return (
     <LayoutAdmin>
       <main>
         <div className="container-fluid mb-5 mt-5">
-          <div className="row mb-4">
+          <div className="row">
             <div className="col-md-12">
               <Link
                 to="/admin/pengaduan-tanaman"
                 className="btn btn-md btn-primary border-0 shadow-sm mb-3"
-                type="button"
               >
                 <i className="fa fa-long-arrow-alt-left me-2"></i> Kembali
               </Link>
 
-              <div className="card border-0 rounded shadow-sm border-top-success">
-                {loadingPengaduanTanaman ? (
-                  <Loading />
-                ) : (
-                  <div className="card-body">
-                    <h6>Detail Pengaduan Tanaman</h6>
-                    <hr />
-                    <div className="row">
-                      <div className="col-md-6">
-                        <table className="table">
-                          <tbody>
-                            <tr>
-                              <td>Kelompok Tani</td>
-                              <td>: {pengaduanTanaman.kelompokTani || "-"}</td>
-                            </tr>
-                            <tr>
-                              <td>Nama pelapor</td>
-                              <td>
-                                : {pengaduanTanaman?.user?.namaLengkap || "-"}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>Lokasi</td>
-                              <td>
-                                :{" "}
-                                {pengaduanTanaman.alamat &&
-                                pengaduanTanaman.kecamatan &&
-                                pengaduanTanaman.kabupaten
-                                  ? `${pengaduanTanaman.alamat}, ${pengaduanTanaman.kecamatan}, ${pengaduanTanaman.kabupaten}`
-                                  : "-"}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>Koordinat</td>
-                              <td>
-                                :{" "}
-                                {pengaduanTanaman.latitude &&
-                                pengaduanTanaman.longitude ? (
-                                  <>
-                                    {pengaduanTanaman.latitude},{" "}
-                                    {pengaduanTanaman.longitude}
-                                    <br />
-                                    <a
-                                      href={`https://www.google.com/maps?q=${pengaduanTanaman.latitude},${pengaduanTanaman.longitude}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="btn btn-sm btn-outline-success mt-2"
-                                    >
-                                      <i className="fa fa-map-pin me-1"></i>
-                                      Lihat di Google Maps
-                                    </a>
-                                  </>
-                                ) : (
-                                  "-"
-                                )}
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      <div className="col-md-6">
-                        <table className="table">
-                          <tbody>
-                            <tr>
-                              <td>Status saat ini</td>
-                              <td>
-                                : {getStatusBadge(pengaduanTanaman.status)}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>Tanggal dibuat</td>
-                              <td>
-                                :{" "}
-                                {pengaduanTanaman.createdAt
-                                  ? DateID(new Date(pengaduanTanaman.createdAt))
-                                  : "-"}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>Terakhir Diperbarui</td>
-                              <td>
-                                :{" "}
-                                {pengaduanTanaman.updatedAt
-                                  ? DateID(new Date(pengaduanTanaman.updatedAt))
-                                  : "-"}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>Deskripsi Masalah Tanaman</td>
-                              <td style={{ whiteSpace: "pre-wrap" }}>
-                                : {pengaduanTanaman.deskripsi || "-"}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>Foto Tanaman</td>
-                              <td>
-                                :{" "}
-                                {pengaduanTanaman.image ? (
-                                  <>
-                                    <br />
-                                    <img
-                                      src={pengaduanTanaman.image}
-                                      alt="Foto Tanaman"
-                                      className="img-fluid rounded mt-2"
-                                      style={{
-                                        maxHeight: "300px",
-                                        objectFit: "contain",
-                                      }}
-                                    />
-                                  </>
-                                ) : (
-                                  "-"
-                                )}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>Nama Petugas POPT</td>
-                              <td>
-                                : {pengaduanTanaman?.popt?.namaLengkap || "-"}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>Tanggal Diverifikasi Petugas POPT</td>
-                              <td>
-                                :{" "}
-                                {pengaduanTanaman.tanggalVerifikasi
-                                  ? DateID(
-                                      new Date(
-                                        pengaduanTanaman.tanggalVerifikasi
-                                      )
-                                    )
-                                  : "-"}
-                              </td>
-                            </tr>
-                            {pengaduanTanaman.catatanPopt && (
+              {/* Header Info */}
+              <div className="card border-0 rounded shadow-sm mb-4">
+                <div className="card-body">
+                  <div className="row">
+                    <div className="col-md-8">
+                      <h5>
+                        <i className="fas fa-file-alt me-2"></i>
+                        Detail Pengaduan Tanaman
+                      </h5>
+                      <hr />
+                      <div className="row">
+                        <div className="col-md-6">
+                          <table className="table table-borderless table-sm">
+                            <tbody>
                               <tr>
-                                <td>Catatan Petugas POPT</td>
-                                <td style={{ whiteSpace: "pre-wrap" }}>
-                                  : {pengaduanTanaman.catatanPopt}
+                                <td width="180" className="fw-bold">
+                                  Status
+                                </td>
+                                <td>{getStatusBadge(pengaduan.status)}</td>
+                              </tr>
+                              <tr>
+                                <td className="fw-bold">Tanggal Pengaduan</td>
+                                <td>
+                                  {new Date(
+                                    pengaduan.created_at,
+                                  ).toLocaleDateString("id-ID", {
+                                    weekday: "long",
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                  })}
                                 </td>
                               </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Card Aksi */}
-          <div className="row mb-4">
-            <div className="col-md-12">
-              <div className="card border-0 rounded shadow-sm border-top-success">
-                <div className="card-body">
-                  <h6>Aksi</h6>
-                  <hr />
-
-                  {/* Assign POPT - Hanya tampil jika status Pending */}
-                  {pengaduanTanaman.status === "Pending" && (
-                    <button
-                      onClick={() => setShowAssignModal(true)}
-                      className="btn btn-info w-100 mb-2"
-                    >
-                      <i className="fa fa-user-plus me-2"></i>
-                      Tugaskan ke POPT
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Card Upload/Mark As Handled - Tampil jika status Diverifikasi */}
-          {pengaduanTanaman.status === "Diverifikasi" && (
-            <div className="row">
-              <div className="col-md-12">
-                <div className="card border-0 rounded shadow-sm">
-                  <div className="card-header bg-success text-white">
-                    <h6 className="mb-0">
-                      <i className="fa fa-clipboard-check me-2"></i>
-                      Tindak Lanjut Pengaduan
-                    </h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="alert alert-info">
-                      <i className="fa fa-info-circle me-2"></i>
-                      Pengaduan telah diverifikasi oleh POPT. Pilih tindakan:
-                    </div>
-
-                    <div className="row g-3">
-                      {/* Opsi 1: Tandai Ditangani */}
-                      <div className="col-md-6">
-                        <div className="card border-primary h-100">
-                          <div className="card-body text-center">
-                            <i
-                              className="fa fa-check-circle text-primary mb-3"
-                              style={{ fontSize: "3rem" }}
-                            ></i>
-                            <h6 className="card-title">Tandai Ditangani</h6>
-                            <p className="card-text small text-muted">
-                              Gunakan opsi ini jika masalah sudah dapat
-                              ditangani berdasarkan catatan POPT tanpa perlu
-                              upload file laporan lengkap.
-                            </p>
-                            <button
-                              onClick={handleMarkAsHandled}
-                              className="btn btn-primary w-100"
-                            >
-                              <i className="fa fa-check me-2"></i>
-                              Tandai Ditangani
-                            </button>
-                          </div>
+                              <tr>
+                                <td className="fw-bold">Nama Pelapor</td>
+                                <td>{pengaduan.pelapor_nama}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <div className="col-md-6">
+                          <table className="table table-borderless table-sm">
+                            <tbody>
+                              <tr>
+                                <td width="180" className="fw-bold">
+                                  Kelompok Tani
+                                </td>
+                                <td>{pengaduan.kelompok_tani_nama}</td>
+                              </tr>
+                              <tr>
+                                <td className="fw-bold">Kecamatan</td>
+                                <td>{pengaduan.kecamatan_nama}</td>
+                              </tr>
+                              <tr>
+                                <td className="fw-bold">Petugas POPT</td>
+                                <td>
+                                  {pengaduan.popt_nama ? (
+                                    <span className="badge bg-info">
+                                      {pengaduan.popt_nama}
+                                    </span>
+                                  ) : (
+                                    <span className="text-muted">
+                                      Belum ditugaskan
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
                         </div>
                       </div>
+                    </div>
 
-                      {/* Opsi 2: Upload Laporan */}
-                      <div className="col-md-6">
-                        <div className="card border-success h-100">
-                          <div className="card-body text-center">
-                            <i
-                              className="fa fa-file-upload text-success mb-3"
-                              style={{ fontSize: "3rem" }}
-                            ></i>
-                            <h6 className="card-title">
-                              Upload Laporan Lengkap
-                            </h6>
-                            <p className="card-text small text-muted">
-                              Upload file laporan hasil pemeriksaan lengkap jika
-                              diperlukan dokumentasi detail.
-                            </p>
-                            <button
-                              onClick={() => setShowUploadModal(true)}
-                              className="btn btn-success w-100"
-                            >
-                              <i className="fa fa-upload me-2"></i>
-                              Upload Laporan
-                            </button>
+                    <div className="col-md-4">
+                      <div className="d-flex flex-column gap-2">
+                        {canUploadPemeriksaan() && pemeriksaan.length === 0 && (
+                          <button
+                            className="btn btn-success"
+                            onClick={() => setShowPemeriksaanModal(true)}
+                          >
+                            <i className="fas fa-upload me-2"></i>
+                            Upload Hasil Pemeriksaan
+                          </button>
+                        )}
+
+                        {pengaduan.status === "selesai" && (
+                          <div className="alert alert-success mb-0">
+                            <i className="fas fa-check-circle me-2"></i>
+                            Pengaduan telah selesai diproses
                           </div>
-                        </div>
+                        )}
+
+                        {pengaduan.status !== "diverifikasi" &&
+                          pengaduan.status !== "selesai" && (
+                            <div className="alert alert-info mb-0">
+                              <i className="fas fa-info-circle me-2"></i>
+                              Menunggu verifikasi dari POPT
+                            </div>
+                          )}
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* Card Hasil Laporan - Tampil jika status Selesai atau Ditangani */}
-          {(pengaduanTanaman.status === "Selesai" ||
-            pengaduanTanaman.status === "Ditangani") && (
-            <div className="row">
-              <div className="col-md-12">
-                <div className="card border-0 rounded shadow-sm">
-                  <div className="card-header bg-success text-white">
-                    <h6 className="mb-0">
-                      <i className="fa fa-clipboard-check me-2"></i>
-                      Status Penanganan
-                    </h6>
+              {/* Content Section */}
+              <div className="row">
+                <div className="col-md-8">
+                  {/* Deskripsi Pengaduan */}
+                  <div className="card border-0 rounded shadow-sm mb-4">
+                    <div className="card-header bg-white">
+                      <h6 className="mb-0">
+                        <i className="fas fa-align-left me-2"></i>
+                        Deskripsi Pengaduan
+                      </h6>
+                    </div>
+                    <div className="card-body">
+                      <p style={{ whiteSpace: "pre-wrap" }} className="mb-0">
+                        {pengaduan.deskripsi}
+                      </p>
+                    </div>
                   </div>
-                  <div className="card-body">
-                    {pengaduanTanaman.status === "Ditangani" ? (
-                      <div className="alert alert-success">
-                        <i className="fa fa-check-circle me-2"></i>
-                        Pengaduan telah ditangani berdasarkan catatan POPT
+
+                  {/* Verifikasi POPT */}
+                  {verifikasi.length > 0 && (
+                    <div className="card border-0 rounded shadow-sm mb-4">
+                      <div className="card-header bg-white">
+                        <h6 className="mb-0">
+                          <i className="fas fa-check-double me-2"></i>
+                          Verifikasi POPT
+                        </h6>
                       </div>
-                    ) : (
-                      <div>
-                        <div className="alert alert-success">
-                          <i className="fa fa-check-circle me-2"></i>
-                          Laporan sudah diupload dan pengaduan selesai
-                        </div>
-                        {pengaduanTanaman.file && (
-                          <div className="mb-3">
-                            <label className="text-muted small">
-                              File Laporan
-                            </label>
-                            <div className="d-flex align-items-center gap-2 mt-2">
-                              <i
-                                className="fa fa-file-pdf text-danger"
-                                style={{ fontSize: "2rem" }}
-                              ></i>
+                      <div className="card-body">
+                        {verifikasi.map((item, index) => (
+                          <div key={index} className="mb-3 pb-3 border-bottom">
+                            <div className="d-flex justify-content-between align-items-start mb-2">
                               <div>
-                                <p className="mb-0 fw-bold">
-                                  Laporan Pengaduan
-                                </p>
+                                <strong className="text-primary">
+                                  {item.popt_nama}
+                                </strong>
+                                <br />
+                                <small className="text-muted">
+                                  {new Date(item.created_at).toLocaleString(
+                                    "id-ID",
+                                  )}
+                                </small>
+                              </div>
+                            </div>
+
+                            <p className="mb-2">
+                              <strong>Catatan:</strong>
+                              <br />
+                              {item.catatan}
+                            </p>
+
+                            {item.foto_visit && (
+                              <div className="mb-2">
+                                <strong>Foto Kunjungan:</strong>
+                                <br />
+                                <img
+                                  src={item.foto_visit}
+                                  alt="Foto Verifikasi"
+                                  className="img-fluid rounded mt-2"
+                                  style={{ maxHeight: "300px" }}
+                                />
+                              </div>
+                            )}
+
+                            {item.latitude && item.longitude && (
+                              <div>
+                                <strong>Lokasi Verifikasi:</strong>
+                                <br />
+                                <small className="text-muted">
+                                  Lat: {item.latitude}, Long: {item.longitude}
+                                </small>
+                                <br />
                                 <a
-                                  href={pengaduanTanaman.file}
+                                  href={`https://www.google.com/maps?q=${item.latitude},${item.longitude}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="btn btn-sm btn-outline-primary mt-1"
                                 >
-                                  <i className="fa fa-download me-1"></i>
-                                  Download Laporan
+                                  <i className="fas fa-map-marker-alt me-1"></i>
+                                  Lihat di Maps
                                 </a>
                               </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Hasil Pemeriksaan Admin */}
+                  {pemeriksaan.length > 0 && (
+                    <div className="card border-0 rounded shadow-sm mb-4">
+                      <div className="card-header bg-white">
+                        <h6 className="mb-0">
+                          <i className="fas fa-clipboard-check me-2"></i>
+                          Hasil Pemeriksaan
+                        </h6>
+                      </div>
+                      <div className="card-body">
+                        {pemeriksaan.map((item, index) => (
+                          <div key={index} className="mb-3 pb-3 border-bottom">
+                            <div className="d-flex justify-content-between align-items-start mb-2">
+                              <div>
+                                <strong className="text-success">
+                                  {item.pemeriksa_nama}
+                                </strong>
+                                <br />
+                                <small className="text-muted">
+                                  {new Date(item.created_at).toLocaleString(
+                                    "id-ID",
+                                  )}
+                                </small>
+                              </div>
+                              <span className="badge bg-success">
+                                {item.hasil_pemeriksaan}
+                              </span>
                             </div>
+
+                            {item.file && (
+                              <a
+                                href={item.file}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-sm btn-primary"
+                              >
+                                <i className="fas fa-download me-1"></i>
+                                Download Dokumen
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="col-md-4">
+                  {/* Foto Pengaduan */}
+                  <div className="card border-0 rounded shadow-sm mb-4">
+                    <div className="card-header bg-white">
+                      <h6 className="mb-0">
+                        <i className="fas fa-image me-2"></i>
+                        Foto Pengaduan
+                      </h6>
+                    </div>
+                    <div className="card-body">
+                      {pengaduan.image ? (
+                        <img
+                          src={pengaduan.image}
+                          alt="Foto Pengaduan"
+                          className="img-fluid rounded"
+                        />
+                      ) : (
+                        <div className="alert alert-secondary mb-0">
+                          <i className="fas fa-image me-2"></i>
+                          Tidak ada foto
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Lokasi Pengaduan */}
+                  <div className="card border-0 rounded shadow-sm mb-4">
+                    <div className="card-header bg-white">
+                      <h6 className="mb-0">
+                        <i className="fas fa-map-marker-alt me-2"></i>
+                        Lokasi Pengaduan
+                      </h6>
+                    </div>
+                    <div className="card-body">
+                      {pengaduan.latitude && pengaduan.longitude ? (
+                        <>
+                          <p className="mb-2">
+                            <strong>Koordinat:</strong>
+                            <br />
+                            <small className="text-muted">
+                              Lat: {pengaduan.latitude}
+                              <br />
+                              Long: {pengaduan.longitude}
+                            </small>
+                          </p>
+                          <a
+                            href={`https://www.google.com/maps?q=${pengaduan.latitude},${pengaduan.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-sm btn-primary w-100"
+                          >
+                            <i className="fas fa-map me-1"></i>
+                            Buka di Google Maps
+                          </a>
+                        </>
+                      ) : (
+                        <div className="alert alert-secondary mb-0">
+                          <i className="fas fa-map-marker-alt me-2"></i>
+                          Lokasi tidak tersedia
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Modal Upload Pemeriksaan */}
+        {showPemeriksaanModal && (
+          <>
+            <div
+              className="modal-backdrop fade show"
+              onClick={() => setShowPemeriksaanModal(false)}
+            ></div>
+            <div
+              className="modal fade show d-block"
+              tabIndex="-1"
+              style={{ paddingRight: "17px" }}
+            >
+              <div className="modal-dialog modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">
+                      <i className="fas fa-upload me-2"></i>
+                      Upload Hasil Pemeriksaan
+                    </h5>
+                    <button
+                      type="button"
+                      className="btn-close"
+                      onClick={() => setShowPemeriksaanModal(false)}
+                    ></button>
+                  </div>
+                  <form onSubmit={handleSubmitPemeriksaan}>
+                    <div className="modal-body">
+                      <div className="alert alert-info">
+                        <i className="fas fa-info-circle me-2"></i>
+                        Status pengaduan akan otomatis berubah menjadi{" "}
+                        <strong>"Selesai"</strong> setelah upload pemeriksaan.
+                      </div>
+
+                      <div className="mb-3">
+                        <label className="form-label fw-bold">
+                          Hasil Pemeriksaan{" "}
+                          <span className="text-danger">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={hasilPemeriksaan}
+                          onChange={(e) => setHasilPemeriksaan(e.target.value)}
+                          placeholder="Contoh: Terverifikasi positif hama wereng"
+                        />
+                        {errors.hasilPemeriksaan && (
+                          <div className="alert alert-danger mt-2">
+                            {errors.hasilPemeriksaan}
                           </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
 
-        {/* Modal Assign POPT */}
-        {showAssignModal && (
-          <div
-            className="modal show d-block"
-            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-          >
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">Tugaskan ke POPT</h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={() => setShowAssignModal(false)}
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  <label className="form-label">Pilih Petugas POPT</label>
-                  <select
-                    className="form-select"
-                    value={selectedPopt}
-                    onChange={(e) => setSelectedPopt(e.target.value)}
-                  >
-                    <option value="">-- Pilih POPT --</option>
-                    {poptList.map((popt) => (
-                      <option key={popt.id} value={popt.id}>
-                        {popt.namaLengkap} ({popt.username})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => setShowAssignModal(false)}
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={handleAssignPopt}
-                    disabled={!selectedPopt}
-                  >
-                    Tugaskan
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Modal Upload Laporan */}
-        {showUploadModal && (
-          <div
-            className="modal show d-block"
-            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-          >
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content">
-                <div className="modal-header bg-success text-white">
-                  <h5 className="modal-title">
-                    <i className="fa fa-file-upload me-2"></i>
-                    Upload Hasil Laporan
-                  </h5>
-                  <button
-                    type="button"
-                    className="btn-close btn-close-white"
-                    onClick={() => {
-                      setShowUploadModal(false);
-                      setLaporanFile(null);
-                    }}
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  <div className="mb-3">
-                    <label className="form-label">
-                      File Laporan <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="file"
-                      className="form-control"
-                      accept=".pdf"
-                      onChange={handleFileChange}
-                    />
-                    <small className="text-muted">
-                      Format: PDF, Maksimal 5MB
-                    </small>
-                    {laporanFile && (
-                      <div className="alert alert-info mt-2 mb-0">
-                        <i className="fa fa-file-pdf me-2"></i>
-                        {laporanFile.name}
+                      <div className="mb-3">
+                        <label className="form-label fw-bold">
+                          Dokumen Pemeriksaan{" "}
+                          <span className="text-danger">*</span>
+                        </label>
+                        <input
+                          type="file"
+                          className="form-control"
+                          accept=".pdf,.doc,.docx"
+                          onChange={(e) => setFile(e.target.files[0])}
+                        />
+                        <small className="text-muted">
+                          Format: PDF, DOC, DOCX (Max: 5MB)
+                        </small>
+                        {errors.file && (
+                          <div className="alert alert-danger mt-2">
+                            {errors.file}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => {
-                      setShowUploadModal(false);
-                      setLaporanFile(null);
-                    }}
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-success"
-                    onClick={handleUploadLaporan}
-                    disabled={!laporanFile}
-                  >
-                    <i className="fa fa-upload me-2"></i>
-                    Upload
-                  </button>
+                    </div>
+                    <div className="modal-footer">
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => setShowPemeriksaanModal(false)}
+                      >
+                        Batal
+                      </button>
+                      <button type="submit" className="btn btn-success">
+                        <i className="fa fa-upload me-2"></i>
+                        Upload Pemeriksaan
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             </div>
-          </div>
+          </>
         )}
       </main>
     </LayoutAdmin>

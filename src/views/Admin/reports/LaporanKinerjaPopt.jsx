@@ -134,10 +134,10 @@ export default function LaporanKinerjaPOPT() {
                               <td className="fw-bold text-center">
                                 {index + 1}
                               </td>
-                              <td>{item.nama_popt}</td>
+                              <td>{item.popt_nama}</td>
                               <td>{item.kecamatan_nama}</td>
                               <td>{item.total_ditugaskan}</td>
-                              <td>{item.dalam_proses}</td>
+                              <td>{item.total_verifikasi}</td>
                               <td>{item.selesai}</td>
                               <td>
                                 <span

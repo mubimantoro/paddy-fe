@@ -29,11 +29,11 @@ export default function PengaduanTanamanIndex() {
         Authorization: `Bearer ${token}`,
       },
     }).then((response) => {
-      setPengaduanTanaman(response.data.data);
+      setPengaduanTanaman(response.data.data.pengaduan);
       setPagination(() => ({
-        currentPage: response.data.pagination.page,
-        perPage: response.data.pagination.size,
-        total: response.data.pagination.totalItems,
+        currentPage: response.data.data.pagination.page,
+        perPage: response.data.data.pagination.total,
+        total: response.data.data.pagination.total,
       }));
     });
   };
