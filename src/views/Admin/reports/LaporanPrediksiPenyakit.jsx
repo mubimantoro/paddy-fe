@@ -64,6 +64,35 @@ export default function LaporanPrediksiPenyakit() {
     }, 100);
   };
 
+  const getConfidenceBadge = (confidence) => {
+    if (confidence >= 90) return "badge bg-success";
+    if (confidence >= 75) return "badge bg-primary";
+    if (confidence >= 60) return "badge bg-warning text-dark";
+    return "badge bg-danger";
+  };
+
+  const getSummaryStats = () => {
+    return {
+      totalPrediksi: laporanPenyakit.reduce(
+        (sum, item) => sum + parseInt(item.total || 0),
+        0,
+      ),
+      totalPenyakit: laporanPenyakit.length,
+      totalUser: laporanUser.length,
+      avgConfidence:
+        laporanPenyakit.length > 0
+          ? (
+              laporanPenyakit.reduce(
+                (sum, item) => sum + parseFloat(item.avg_confidence || 0),
+                0,
+              ) / laporanPenyakit.length
+            ).toFixed(2)
+          : 0,
+    };
+  };
+
+  const stats = getSummaryStats();
+
   return (
     <LayoutAdmin>
       <main>
@@ -127,39 +156,78 @@ export default function LaporanPrediksiPenyakit() {
 
               {/* Laporan Per Penyakit */}
               <div className="card border-0 rounded shadow-sm mb-4">
-                <div className="card-header bg-white">
-                  <h6>
-                    <i className="fas fa-virus me-2"></i>Laporan Prediksi Per
-                    Penyakit
+                <div className="card-header bg-white border-0 pt-3 pb-3">
+                  <h6 className="mb-0">
+                    <i className="fas fa-table me-2 text-primary"></i>
+                    Laporan Prediksi Per Jenis Penyakit
                   </h6>
                 </div>
                 <div className="card-body">
                   <div className="table-responsive">
-                    <table className="table table-bordered table-centered mb-0 rounded">
+                    <table className="table table-hover table-bordered align-middle mb-0 rounded">
                       <thead className="thead-dark">
                         <tr className="border-0">
-                          <th className="border-0">No.</th>
-                          <th className="border-0">Nama Penyakit</th>
-                          <th className="border-0">Jumlah Prediksi</th>
-                          <th className="border-0">Persentase</th>
+                          <th
+                            className="border-0 text-center"
+                            style={{ width: "5%" }}
+                          >
+                            No.
+                          </th>
+                          <th className="border-0">Jenis Penyakit</th>
+                          <th className="border-0 text-center">
+                            Total Prediksi
+                          </th>
+                          <th className="border-0 text-center">
+                            Tingkat Keyakinan
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {laporanPenyakit.length > 0 ? (
-                          laporanPenyakit.map((item, index) => (
-                            <tr key={index}>
-                              <td className="fw-bold text-center">
-                                {index + 1}
-                              </td>
-                              <td>{item.disease_name}</td>
-                              <td>{item.total}</td>
-                              <td>{item.persentase}%</td>
-                            </tr>
-                          ))
+                          laporanPenyakit
+                            .sort(
+                              (a, b) => parseInt(b.total) - parseInt(a.total),
+                            )
+                            .map((item, index) => {
+                              const percentage = (
+                                (item.total / stats.totalPrediksi) *
+                                100
+                              ).toFixed(1);
+
+                              return (
+                                <tr key={index}>
+                                  <td className="fw-bold text-center">
+                                    {index + 1}
+                                  </td>
+                                  <td>
+                                    <div className="fw-semibold">
+                                      {item.disease}
+                                    </div>
+                                  </td>
+                                  <td className="text-center">
+                                    <span className="badge bg-danger rounded-pill px-3">
+                                      {item.total}
+                                    </span>
+                                  </td>
+                                  <td className="text-center">
+                                    <span
+                                      className={getConfidenceBadge(
+                                        item.avg_confidence,
+                                      )}
+                                    >
+                                      {item.avg_confidence}%
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })
                         ) : (
                           <tr>
-                            <td colSpan={4}>
-                              <div className="alert alert-danger border-0 rounded shadow-sm w-100 text-center">
+                            <td colSpan={6}>
+                              <div
+                                className="alert alert-danger border-0 rounded shadow-sm w-100 text-center"
+                                role="alert"
+                              >
                                 Data Belum Tersedia!
                               </div>
                             </td>
@@ -173,39 +241,80 @@ export default function LaporanPrediksiPenyakit() {
 
               {/* Laporan Per User */}
               <div className="card border-0 rounded shadow-sm mb-4">
-                <div className="card-header bg-white">
-                  <h6>
-                    <i className="fas fa-user me-2"></i>Laporan Prediksi Per
-                    User
+                <div className="card-header bg-white border-0 pt-3 pb-3">
+                  <h6 className="mb-0">
+                    <i className="fas fa-table me-2 text-primary"></i>
+                    Laporan Prediksi Per User
                   </h6>
                 </div>
                 <div className="card-body">
                   <div className="table-responsive">
-                    <table className="table table-bordered table-centered mb-0 rounded">
+                    <table className="table table-hover table-bordered align-middle mb-0 rounded">
                       <thead className="thead-dark">
                         <tr className="border-0">
-                          <th className="border-0">No.</th>
+                          <th
+                            className="border-0 text-center"
+                            style={{ width: "5%" }}
+                          >
+                            No.
+                          </th>
                           <th className="border-0">Nama User</th>
-                          <th className="border-0">Username</th>
-                          <th className="border-0">Jumlah Prediksi</th>
+                          <th className="border-0">Kelompok Tani</th>
+                          <th className="border-0 text-center">
+                            Total Prediksi
+                          </th>
+                          <th className="border-0">Jenis Penyakit</th>
                         </tr>
                       </thead>
                       <tbody>
                         {laporanUser.length > 0 ? (
-                          laporanUser.map((item, index) => (
-                            <tr key={index}>
-                              <td className="fw-bold text-center">
-                                {index + 1}
-                              </td>
-                              <td>{item.nama_lengkap}</td>
-                              <td>{item.username}</td>
-                              <td>{item.total}</td>
-                            </tr>
-                          ))
+                          laporanUser
+                            .sort(
+                              (a, b) =>
+                                parseInt(b.total_prediksi) -
+                                parseInt(a.total_prediksi),
+                            )
+                            .map((item, index) => (
+                              <tr key={index}>
+                                <td className="fw-bold text-center">
+                                  {index + 1}
+                                </td>
+                                <td>
+                                  <div className="fw-semibold">
+                                    {item.nama_lengkap}
+                                  </div>
+                                </td>
+                                <td>{item.kelompok_tani || "-"}</td>
+                                <td className="text-center">
+                                  <span className="badge bg-primary rounded-pill px-3">
+                                    {item.total_prediksi}
+                                  </span>
+                                </td>
+                                <td>
+                                  <div className="d-flex flex-wrap gap-1">
+                                    {item.diseases
+                                      ? item.diseases
+                                          .split(", ")
+                                          .map((disease, idx) => (
+                                            <span
+                                              key={idx}
+                                              className="badge bg-danger bg-opacity-75"
+                                            >
+                                              {disease}
+                                            </span>
+                                          ))
+                                      : "-"}
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
                         ) : (
                           <tr>
-                            <td colSpan={4}>
-                              <div className="alert alert-danger border-0 rounded shadow-sm w-100 text-center">
+                            <td colSpan={5}>
+                              <div
+                                className="alert alert-danger border-0 rounded shadow-sm w-100 text-center"
+                                role="alert"
+                              >
                                 Data Belum Tersedia!
                               </div>
                             </td>
