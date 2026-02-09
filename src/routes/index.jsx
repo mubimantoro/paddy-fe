@@ -27,6 +27,7 @@ import LaporanPengaduan from "../views/Admin/reports/LaporanPengaduan";
 import LaporanKinerjaPOPT from "../views/Admin/reports/LaporanKinerjaPopt";
 import LaporanAktivitasUser from "../views/Admin/reports/LaporanAktivitasUser";
 import LaporanPrediksiPenyakit from "../views/Admin/reports/LaporanPrediksiPenyakit";
+import LaporanWilayah from "../views/Admin/reports/LaporanWIlayah";
 
 export default function RoutesIndex() {
   return (
@@ -211,6 +212,7 @@ export default function RoutesIndex() {
         path="/admin/reports/aktivitas"
         element={<LaporanAktivitasUser />}
       />
+      <Route path="/admin/reports/wilayah" element={<LaporanWilayah />} />
     </Routes>
   );
 }

@@ -112,17 +112,21 @@ export default function PengaduanTanamanIndex() {
                           <th className="border-0" style={{ width: "10%" }}>
                             Tanggal Pengaduan
                           </th>
+                          <th className="border-0" style={{ width: "12%" }}>
+                            Pelapor
+                          </th>
                           <th className="border-0" style={{ width: "15%" }}>
                             Kelompok Tani
                           </th>
-                          <th className="border-0" style={{ width: "20%" }}>
-                            Alamat
-                          </th>
+
                           <th className="border-0" style={{ width: "12%" }}>
                             Kecamatan
                           </th>
                           <th className="border-0" style={{ width: "20%" }}>
                             Deskripsi Pengaduan
+                          </th>
+                          <th className="border-0" style={{ width: "11%" }}>
+                            POPT
                           </th>
                           <th className="border-0" style={{ width: "8%" }}>
                             Status
@@ -144,15 +148,19 @@ export default function PengaduanTanamanIndex() {
                               <td className="text-muted small">
                                 {DateID(new Date(item.created_at))}
                               </td>
+                              <td>{item.pelapor_nama}</td>
                               <td>{item.kelompok_tani}</td>
                               <td>
-                                {item.alamat}
-                                <br />
-                                <small className="text-muted">
-                                  {item.kabupaten}
-                                </small>
+                                {item.kecamatan}
+                                {item.kabupaten && (
+                                  <>
+                                    <br />
+                                    <small className="text-muted">
+                                      {item.kabupaten}
+                                    </small>
+                                  </>
+                                )}
                               </td>
-                              <td>{item.kecamatan}</td>
                               <td>
                                 <div
                                   style={{
@@ -163,6 +171,15 @@ export default function PengaduanTanamanIndex() {
                                 >
                                   {item.deskripsi}
                                 </div>
+                              </td>
+                              <td>
+                                {item.popt_nama ? (
+                                  <small className="badge bg-info">
+                                    {item.popt_nama}
+                                  </small>
+                                ) : (
+                                  <small className="text-muted">-</small>
+                                )}
                               </td>
                               <td>{getStatusBadge(item.status)}</td>
                               <td className="text-center">

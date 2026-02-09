@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Cookies from "js-cookie";
 import LayoutAdmin from "../../../layouts/Admin";
 import Api from "../../../services/Api";
+import ExportPDFButton from "../../../components/general/ExportPDFButton";
 
 export default function LaporanKinerjaPOPT() {
   document.title = "Laporan Kinerja POPT - SIBalintan";
@@ -20,7 +21,6 @@ export default function LaporanKinerjaPOPT() {
 
   // Fetch data kinerja POPT
   const fetchLaporanKinerja = async () => {
-    setLoading(true);
     const params = new URLSearchParams();
     if (startDate) params.append("start_date", startDate);
     if (endDate) params.append("end_date", endDate);
@@ -36,9 +36,6 @@ export default function LaporanKinerjaPOPT() {
       .catch((error) => {
         console.error("Error fetching laporan kinerja:", error);
         setLaporanKinerja([]);
-      })
-      .finally(() => {
-        setLoading(false);
       });
   };
 
@@ -102,75 +99,29 @@ export default function LaporanKinerjaPOPT() {
     setEndDate(today.toISOString().split("T")[0]);
   };
 
-  // Export Excel
-  const handleExportExcel = async () => {
-    try {
-      const params = new URLSearchParams();
-      if (startDate) params.append("start_date", startDate);
-      if (endDate) params.append("end_date", endDate);
-
-      const response = await Api.get(
-        `/api/reports/popt/kinerja/export/excel?${params}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          responseType: "blob",
-        },
-      );
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute(
-        "download",
-        `Laporan_Kinerja_POPT_${new Date().toISOString().split("T")[0]}.xlsx`,
-      );
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      toast.success("Berhasil export laporan ke Excel", {
-        position: "top-right",
-        duration: 4000,
-      });
-    } catch (error) {
-      console.error("Error exporting Excel:", error);
-      toast.error("Gagal export Excel", {
-        position: "top-right",
-        duration: 4000,
-      });
-    }
-  };
-
-  // Export PDF
   const handleExportPDF = async () => {
+    setExportingPDF(true);
     try {
-      const params = new URLSearchParams();
-      if (startDate) params.append("start_date", startDate);
-      if (endDate) params.append("end_date", endDate);
-
-      const response = await Api.get(
-        `/api/reports/popt/kinerja/export/pdf?${params}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          responseType: "blob",
+      const response = await Api.get(`/api/export/pdf/kinerja-popt`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+        responseType: "blob",
+      });
 
+      // Create download link
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
       link.setAttribute(
         "download",
-        `Laporan_Kinerja_POPT_${new Date().toISOString().split("T")[0]}.pdf`,
+        `Laporan_Wilayah_${new Date().toISOString().split("T")[0]}.pdf`,
       );
       document.body.appendChild(link);
       link.click();
       link.remove();
+
+      // Clean up
       window.URL.revokeObjectURL(url);
 
       toast.success("Berhasil export laporan ke PDF", {
@@ -179,10 +130,12 @@ export default function LaporanKinerjaPOPT() {
       });
     } catch (error) {
       console.error("Error exporting PDF:", error);
-      toast.error("Gagal export PDF", {
+      toast.error("Gagal export PDF. Silakan coba lagi.", {
         position: "top-right",
         duration: 4000,
       });
+    } finally {
+      setExportingPDF(false);
     }
   };
 
@@ -247,61 +200,24 @@ export default function LaporanKinerjaPOPT() {
                 <i className="fa fa-long-arrow-alt-left me-2"></i> Kembali
               </Link>
 
-              {/* Filter */}
-              <div className="card border-0 rounded shadow-sm mb-4">
-                <div className="card-body">
-                  <h6>
-                    <i className="fas fa-filter me-2"></i>Filter Laporan
-                  </h6>
-                  <hr />
-                  <form onSubmit={handleFilter}>
-                    <div className="row">
-                      <div className="col-md-5">
-                        <label className="form-label fw-bold">
-                          Tanggal Mulai
-                        </label>
-                        <input
-                          type="date"
-                          className="form-control"
-                          value={startDate}
-                          onChange={(e) => setStartDate(e.target.value)}
-                        />
-                      </div>
-                      <div className="col-md-5">
-                        <label className="form-label fw-bold">
-                          Tanggal Akhir
-                        </label>
-                        <input
-                          type="date"
-                          className="form-control"
-                          value={endDate}
-                          onChange={(e) => setEndDate(e.target.value)}
-                        />
-                      </div>
-                      <div className="col-md-2 d-flex align-items-end">
-                        <button type="submit" className="btn btn-primary me-2">
-                          <i className="fa fa-search"></i> Filter
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleReset}
-                          className="btn btn-secondary"
-                        >
-                          <i className="fa fa-redo"></i> Reset
-                        </button>
-                      </div>
-                    </div>
-                  </form>
-                </div>
-              </div>
-
               {/* Tabel Kinerja POPT */}
               <div className="card border-0 rounded shadow-sm mb-4">
                 <div className="card-header bg-white border-0 pt-3 pb-3">
-                  <h6 className="mb-0">
-                    <i className="fas fa-table me-2 text-primary"></i>
-                    Detail Kinerja POPT
-                  </h6>
+                  <div className="row align-items-center">
+                    <div className="col-md-6">
+                      <h6 className="mb-0">
+                        <i className="fas fa-table me-2 text-primary"></i>
+                        Detail Kinerja POPT
+                      </h6>
+                    </div>
+                    <div className="col-md-6 text-end">
+                      {/* Export PDF Button */}
+                      <ExportPDFButton
+                        reportType="kinerja-popt"
+                        reportName="Kinerja POPT"
+                      />
+                    </div>
+                  </div>
                 </div>
                 <div className="card-body">
                   <div className="table-responsive">

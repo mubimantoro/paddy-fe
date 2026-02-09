@@ -49,17 +49,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                 </div>
-                <div className="card-footer d-flex align-items-center justify-content-between">
-                  <Link
-                    className="small text-white stretched-link"
-                    to="/admin/popt"
-                  >
-                    Lihat Detail
-                  </Link>
-                  <div className="small text-white">
-                    <i className="fas fa-angle-right"></i>
-                  </div>
-                </div>
+                <div className="card-footer d-flex align-items-center justify-content-between"></div>
               </div>
             </div>
 
@@ -73,17 +63,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                 </div>
-                <div className="card-footer d-flex align-items-center justify-content-between">
-                  <Link
-                    className="small text-white stretched-link"
-                    to="/admin/pengaduan-tanaman"
-                  >
-                    Lihat Detail
-                  </Link>
-                  <div className="small text-white">
-                    <i className="fas fa-angle-right"></i>
-                  </div>
-                </div>
+                <div className="card-footer d-flex align-items-center justify-content-between"></div>
               </div>
             </div>
 
@@ -97,17 +77,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                 </div>
-                <div className="card-footer d-flex align-items-center justify-content-between">
-                  <Link
-                    className="small text-white stretched-link"
-                    to="/admin/users"
-                  >
-                    Lihat Detail
-                  </Link>
-                  <div className="small text-white">
-                    <i className="fas fa-angle-right"></i>
-                  </div>
-                </div>
+                <div className="card-footer d-flex align-items-center justify-content-between"></div>
               </div>
             </div>
 
@@ -121,17 +91,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                 </div>
-                <div className="card-footer d-flex align-items-center justify-content-between">
-                  <Link
-                    className="small text-white stretched-link"
-                    to="/admin/prediksi"
-                  >
-                    Lihat Detail
-                  </Link>
-                  <div className="small text-white">
-                    <i className="fas fa-angle-right"></i>
-                  </div>
-                </div>
+                <div className="card-footer d-flex align-items-center justify-content-between"></div>
               </div>
             </div>
           </div>
@@ -234,13 +194,13 @@ export default function Dashboard() {
                     </div>
                     <div className="col-md-6 col-lg-3 mb-3">
                       <Link
-                        to="/admin/reports/aktivitas"
+                        to="/admin/reports/wilayah"
                         className="text-decoration-none"
                       >
                         <div className="card border-0 bg-light h-100">
                           <div className="card-body text-center">
-                            <i className="fas fa-user-clock text-warning fa-3x mb-2"></i>
-                            <div className="fw-bold">Aktivitas User</div>
+                            <i className="fas fa-map text-warning fa-3x mb-2"></i>
+                            <div className="fw-bold">Laporan Wilayah</div>
                           </div>
                         </div>
                       </Link>

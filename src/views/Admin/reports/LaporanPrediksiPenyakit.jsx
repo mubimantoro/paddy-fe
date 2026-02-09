@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Cookies from "js-cookie";
 import LayoutAdmin from "../../../layouts/Admin";
 import Api from "../../../services/Api";
+import ExportPDFButton from "../../../components/general/ExportPDFButton";
 
 export default function LaporanPrediksiPenyakit() {
   document.title = "Laporan Prediksi Penyakit - SIBalintan";
@@ -106,61 +107,24 @@ export default function LaporanPrediksiPenyakit() {
                 <i className="fa fa-long-arrow-alt-left me-2"></i> Kembali
               </Link>
 
-              {/* Filter */}
-              <div className="card border-0 rounded shadow-sm mb-4">
-                <div className="card-body">
-                  <h6>
-                    <i className="fas fa-filter me-2"></i>Filter Laporan
-                  </h6>
-                  <hr />
-                  <form onSubmit={handleFilter}>
-                    <div className="row">
-                      <div className="col-md-5">
-                        <label className="form-label fw-bold">
-                          Tanggal Mulai
-                        </label>
-                        <input
-                          type="date"
-                          className="form-control"
-                          value={startDate}
-                          onChange={(e) => setStartDate(e.target.value)}
-                        />
-                      </div>
-                      <div className="col-md-5">
-                        <label className="form-label fw-bold">
-                          Tanggal Akhir
-                        </label>
-                        <input
-                          type="date"
-                          className="form-control"
-                          value={endDate}
-                          onChange={(e) => setEndDate(e.target.value)}
-                        />
-                      </div>
-                      <div className="col-md-2 d-flex align-items-end">
-                        <button type="submit" className="btn btn-primary me-2">
-                          <i className="fa fa-search"></i> Filter
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleReset}
-                          className="btn btn-secondary"
-                        >
-                          <i className="fa fa-redo"></i> Reset
-                        </button>
-                      </div>
-                    </div>
-                  </form>
-                </div>
-              </div>
-
               {/* Laporan Per Penyakit */}
               <div className="card border-0 rounded shadow-sm mb-4">
                 <div className="card-header bg-white border-0 pt-3 pb-3">
-                  <h6 className="mb-0">
-                    <i className="fas fa-table me-2 text-primary"></i>
-                    Laporan Prediksi Per Jenis Penyakit
-                  </h6>
+                  <div className="row align-items-center">
+                    <div className="col-md-6">
+                      <h6 className="mb-0">
+                        <i className="fas fa-map-marker-alt me-2 text-info"></i>
+                        Laporan Prediksi Per Jenis Penyakit
+                      </h6>
+                    </div>
+                    <div className="col-md-6 text-end">
+                      <ExportPDFButton
+                        reportType="prediksi-penyakit"
+                        reportName="Prediksi Penyakit"
+                        disabled={laporanPenyakit.length === 0}
+                      />
+                    </div>
+                  </div>
                 </div>
                 <div className="card-body">
                   <div className="table-responsive">
@@ -242,10 +206,21 @@ export default function LaporanPrediksiPenyakit() {
               {/* Laporan Per User */}
               <div className="card border-0 rounded shadow-sm mb-4">
                 <div className="card-header bg-white border-0 pt-3 pb-3">
-                  <h6 className="mb-0">
-                    <i className="fas fa-table me-2 text-primary"></i>
-                    Laporan Prediksi Per User
-                  </h6>
+                  <div className="row align-items-center">
+                    <div className="col-md-6">
+                      <h6 className="mb-0">
+                        <i className="fas fa-map-marker-alt me-2 text-info"></i>
+                        Laporan Prediksi Per User
+                      </h6>
+                    </div>
+                    <div className="col-md-6 text-end">
+                      <ExportPDFButton
+                        reportType="prediksi-user"
+                        reportName="Prediksi User"
+                        disabled={laporanUser.length === 0}
+                      />
+                    </div>
+                  </div>
                 </div>
                 <div className="card-body">
                   <div className="table-responsive">
