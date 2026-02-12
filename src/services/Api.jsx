@@ -1,10 +1,11 @@
 import axios from "axios";
 
 import Cookies from "js-cookie";
+import config from "./env";
 
 const Api = axios.create({
   //set endpoint API
-  baseURL: "http://10.10.8.171:3000",
+  baseURL: config.apiBaseUrl,
 
   //set header axios
   headers: {

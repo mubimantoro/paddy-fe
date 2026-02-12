@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import LayoutAdmin from "../../../layouts/Admin";
 import Api from "../../../services/Api";
 import Cookies from "js-cookie";
-import { confirmAlert } from "react-confirm-alert";
 import toast from "react-hot-toast";
-import DateID from "../../../utils/DateID";
-import Loading from "../../../components/general/Loading";
+import { getImageUrl } from "../../../utils/imageUrl";
+import DocumentPreview from "../../../components/common/DocumentPreview";
+
 export default function PengaduanTanamanDetail() {
   document.title = "Detail Pengaduan Tanaman - SIBalintan";
 
@@ -21,6 +21,9 @@ export default function PengaduanTanamanDetail() {
   const [hasilPemeriksaan, setHasilPemeriksaan] = useState("");
   const [file, setFile] = useState(null);
   const [errors, setErrors] = useState({});
+
+  const [showDocumentPreview, setShowDocumentPreview] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState(null);
 
   const token = Cookies.get("token");
 
@@ -92,6 +95,28 @@ export default function PengaduanTanamanDetail() {
         toast.error("Gagal menambahkan pemeriksaan");
       }
     }
+  };
+
+  const handlePreviewDocument = (item) => {
+    const fileExtension = item.file?.split(".").pop()?.toLowerCase();
+    setSelectedDocument({
+      url: item.file,
+      name: `Pemeriksaan-${item.hasil_pemeriksaan}.${fileExtension}`,
+    });
+    setShowDocumentPreview(true);
+  };
+
+  // ✅ Handler untuk download document
+  const handleDownloadDocument = (fileUrl, filename) => {
+    const fullUrl = getImageUrl(fileUrl);
+    const link = document.createElement("a");
+    link.href = fullUrl;
+    link.download = filename;
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Download dimulai...");
   };
 
   const getStatusBadge = (status) => {
@@ -326,7 +351,7 @@ export default function PengaduanTanamanDetail() {
                                 <strong>Foto Kunjungan:</strong>
                                 <br />
                                 <img
-                                  src={item.foto_visit}
+                                  src={getImageUrl(item.foto_visit)}
                                   alt="Foto Verifikasi"
                                   className="img-fluid rounded mt-2"
                                   style={{ maxHeight: "300px" }}
@@ -370,8 +395,11 @@ export default function PengaduanTanamanDetail() {
                       </div>
                       <div className="card-body">
                         {pemeriksaan.map((item, index) => (
-                          <div key={index} className="mb-3 pb-3 border-bottom">
-                            <div className="d-flex justify-content-between align-items-start mb-2">
+                          <div
+                            key={index}
+                            className={`mb-3 pb-3 ${index < pemeriksaan.length - 1 ? "border-bottom" : ""}`}
+                          >
+                            <div className="d-flex justify-content-between align-items-start mb-3">
                               <div>
                                 <strong className="text-success">
                                   {item.pemeriksa_nama}
@@ -389,15 +417,45 @@ export default function PengaduanTanamanDetail() {
                             </div>
 
                             {item.file && (
-                              <a
-                                href={item.file}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="btn btn-sm btn-primary"
-                              >
-                                <i className="fas fa-download me-1"></i>
-                                Download Dokumen
-                              </a>
+                              <div className="d-flex gap-2 flex-wrap">
+                                {/* ✅ Button Preview */}
+                                <button
+                                  onClick={() => handlePreviewDocument(item)}
+                                  className="btn btn-sm btn-primary"
+                                >
+                                  <i className="fas fa-eye me-1"></i>
+                                  Preview Dokumen
+                                </button>
+
+                                {/* ✅ Button Download */}
+                                <button
+                                  onClick={() => {
+                                    const fileExtension = item.file
+                                      ?.split(".")
+                                      .pop()
+                                      ?.toLowerCase();
+                                    handleDownloadDocument(
+                                      item.file,
+                                      `Pemeriksaan-${item.hasil_pemeriksaan}.${fileExtension}`,
+                                    );
+                                  }}
+                                  className="btn btn-sm btn-success"
+                                >
+                                  <i className="fas fa-download me-1"></i>
+                                  Download
+                                </button>
+
+                                {/* ✅ Button Open in New Tab */}
+                                <a
+                                  href={getImageUrl(item.file)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="btn btn-sm btn-info"
+                                >
+                                  <i className="fas fa-external-link-alt me-1"></i>
+                                  Buka di Tab Baru
+                                </a>
+                              </div>
                             )}
                           </div>
                         ))}
@@ -418,7 +476,7 @@ export default function PengaduanTanamanDetail() {
                     <div className="card-body">
                       {pengaduan.image ? (
                         <img
-                          src={pengaduan.image}
+                          src={getImageUrl(pengaduan.image)}
                           alt="Foto Pengaduan"
                           className="img-fluid rounded"
                         />
@@ -539,7 +597,7 @@ export default function PengaduanTanamanDetail() {
                           onChange={(e) => setFile(e.target.files[0])}
                         />
                         <small className="text-muted">
-                          Format: PDF, DOC, DOCX (Max: 5MB)
+                          Format: PDF, DOC, DOCX (Max: 10MB)
                         </small>
                         {errors.file && (
                           <div className="alert alert-danger mt-2">
@@ -566,6 +624,18 @@ export default function PengaduanTanamanDetail() {
               </div>
             </div>
           </>
+        )}
+
+        {selectedDocument && (
+          <DocumentPreview
+            show={showDocumentPreview}
+            onClose={() => {
+              setShowDocumentPreview(false);
+              setSelectedDocument(null);
+            }}
+            fileUrl={selectedDocument.url}
+            fileName={selectedDocument.name}
+          />
         )}
       </main>
     </LayoutAdmin>
